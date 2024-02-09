@@ -4,10 +4,9 @@ import br.ufal.ic.p2.wepayu.Exception.DataFinalInvalidaException;
 import br.ufal.ic.p2.wepayu.Exception.DataInicialInvalidaException;
 import br.ufal.ic.p2.wepayu.Exception.DataInicialPosteriorFinalException;
 import br.ufal.ic.p2.wepayu.Exception.DataInvalidaException;
-import br.ufal.ic.p2.wepayu.TratamentoEntrada;
+import br.ufal.ic.p2.wepayu.utils.TratamentoEntrada;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 

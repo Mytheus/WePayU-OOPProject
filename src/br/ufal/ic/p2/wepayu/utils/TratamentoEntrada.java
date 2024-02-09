@@ -1,4 +1,4 @@
-package br.ufal.ic.p2.wepayu;
+package br.ufal.ic.p2.wepayu.utils;
 
 import br.ufal.ic.p2.wepayu.Exception.EnderecoNaoPodeSerNuloException;
 import br.ufal.ic.p2.wepayu.Exception.NomeNaoPodeSerNuloException;

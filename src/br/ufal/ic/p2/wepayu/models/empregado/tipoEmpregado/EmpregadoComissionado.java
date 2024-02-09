@@ -1,16 +1,15 @@
 package br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
-import br.ufal.ic.p2.wepayu.TratamentoEntrada;
+import br.ufal.ic.p2.wepayu.utils.TratamentoEntrada;
 import br.ufal.ic.p2.wepayu.models.ResultadoDeVenda;
 import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
 
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class EmpregadoComissionado extends Empregado {
 
@@ -43,6 +42,20 @@ public class EmpregadoComissionado extends Empregado {
 
         LocalDate dataInicialF = entrada.checkData(dataInicial, true);
         LocalDate dataFinalF = entrada.checkData(dataFinal, false);
+
+        if (dataInicialF.isAfter(dataFinalF)) throw new DataInicialPosteriorFinalException();
+        double total = 0;
+        for (ResultadoDeVenda venda : vendas) {
+            LocalDate dataVenda = venda.getData();
+            if (dataVenda.isAfter(dataInicialF.minusDays(1)) && dataVenda.isBefore(dataFinalF))
+                total += venda.getValor();
+        }
+        return total;
+    }
+
+    public double getVendas(LocalDate dataInicialF, LocalDate dataFinalF) throws DataInicialInvalidaException,
+            DataFinalInvalidaException, DataInicialPosteriorFinalException {
+        TratamentoEntrada entrada = new TratamentoEntrada();
 
         if (dataInicialF.isAfter(dataFinalF)) throw new DataInicialPosteriorFinalException();
         double total = 0;

@@ -1,4 +1,4 @@
-package br.ufal.ic.p2.wepayu;
+package br.ufal.ic.p2.wepayu.utils;
 
 import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteException;
 import br.ufal.ic.p2.wepayu.Exception.HaOutroEmpregadoIdMembroException;
@@ -10,6 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ListaEmpregados {
+
+
+    public List<Empregado> getList() {
+        return list;
+    }
 
     private List<Empregado> list;
 
@@ -29,6 +34,7 @@ public class ListaEmpregados {
     {
         return this.list.get(index);
     }
+
 
     public void remove(String index) throws EmpregadoNaoExisteException {
         for (int i = 0; i < this.size(); i++) {

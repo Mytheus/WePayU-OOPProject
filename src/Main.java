@@ -1,22 +1,15 @@
 import br.ufal.ic.p2.wepayu.Exception.AtributoNaoExisteException;
 import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteException;
 import br.ufal.ic.p2.wepayu.Exception.IdEmpregadoNaoPodeSerNuloException;
-import br.ufal.ic.p2.wepayu.Facade;
-import br.ufal.ic.p2.wepayu.ListaEmpregados;
-import br.ufal.ic.p2.wepayu.Persistence;
-import br.ufal.ic.p2.wepayu.models.CartaoDePonto;
-import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
-import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoAssalariado;
-import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoComissionado;
-import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoHorista;
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.security.AnyTypePermission;
+import br.ufal.ic.p2.wepayu.utils.Persistence;
 import easyaccept.EasyAccept;
+
+import java.io.IOException;
 
 // Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
 // then press Enter. You can now see whitespace characters in your code.
 public class Main {
-    public static void main(String[] args) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, AtributoNaoExisteException {
+    public static void main(String[] args) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, AtributoNaoExisteException, IOException {
         String facade = "br.ufal.ic.p2.wepayu.Facade";
         EasyAccept.main(new String[]{facade, "tests/us1.txt"});
         EasyAccept.main(new String[]{facade, "tests/us1_1.txt"});
@@ -31,6 +24,9 @@ public class Main {
         EasyAccept.main(new String[]{facade, "tests/us6.txt"});
         EasyAccept.main(new String[]{facade, "tests/us6_1.txt"});
 //        EasyAccept.main(new String[]{facade, "tests/us7.txt"});
+/*        Persistence persistence = new Persistence("folha-2005-01-07.txt");
+        persistence.createFile();
+        persistence.readWriteToFile("folhaPagamentoCabecalhos\\horista.txt");*/
 //        EasyAccept.main(new String[]{facade, "tests/us8.txt"});
 //        EasyAccept.main(new String[]{facade, "tests/us9.txt"});
 //        EasyAccept.main(new String[]{facade, "tests/us9_1.txt"});
