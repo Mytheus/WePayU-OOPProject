@@ -1,42 +1,53 @@
 package br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado;
 
-import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteException;
+import br.ufal.ic.p2.wepayu.Exception.*;
+import br.ufal.ic.p2.wepayu.TratamentoEntrada;
 import br.ufal.ic.p2.wepayu.models.CartaoDePonto;
 import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class EmpregadoHorista extends Empregado {
 
     protected List<CartaoDePonto> pontos;
-    public EmpregadoHorista(String nome, String endereco, String tipo, double salario) throws EmpregadoNaoExisteException {
-        super(nome, endereco, tipo, salario);
+    public EmpregadoHorista(String id, String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
+        super(id, nome, endereco, tipo, salario);
         pontos = new ArrayList<>();
     }
 
-    public void addNewPonto(String data, String horas)
-    {
+    public void addNewPonto(String data, String horas) throws DataInvalidaException {
         pontos.add(new CartaoDePonto(data, horas));
     }
 
-    public double getHoras(String dataInicial, String dataFinal, boolean extras)
-    {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        LocalDate dataInicialF = LocalDate.parse(dataInicial, formatter);
-        LocalDate dataFinalF = LocalDate.parse(dataFinal, formatter);
+    public double getHoras(String dataInicial, String dataFinal, boolean extras) throws DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException {
+
+        TratamentoEntrada entrada = new TratamentoEntrada();
+
+        LocalDate dataInicialF = entrada.checkData(dataInicial, true);
+        LocalDate dataFinalF = entrada.checkData(dataFinal, false);
+
+        if (dataInicialF.isAfter(dataFinalF)) throw new DataInicialPosteriorFinalException();
         double total = 0;
+
         for (CartaoDePonto ponto : pontos) {
             LocalDate dataHoras = ponto.getData();
-            if (dataHoras.isAfter(dataInicialF) && dataHoras.isBefore(dataFinalF))
+            double horas = Double.parseDouble(ponto.getHoras());;
+
+            if (dataHoras.isAfter(dataInicialF.minusDays(1)) && dataHoras.isBefore(dataFinalF)) {
                 if (extras) {
-                    if (Double.parseDouble(ponto.getHoras()) > 8)
-                        total += Double.parseDouble(ponto.getHoras()) - 8;
-                } else
-                    total += (Double.parseDouble(ponto.getHoras()) > 8 ? 8 :
-                            Double.parseDouble(ponto.getHoras()));
+                    if (horas > 8) {
+                        total += horas - 8;
+                    }
+                } else {
+                    total += ((horas > 8) ? 8 : horas);
+                }
+            }
         }
         return total;
     }

@@ -1,5 +1,11 @@
 package br.ufal.ic.p2.wepayu.models.sindicato;
 
+import br.ufal.ic.p2.wepayu.Exception.DataFinalInvalidaException;
+import br.ufal.ic.p2.wepayu.Exception.DataInicialInvalidaException;
+import br.ufal.ic.p2.wepayu.Exception.DataInicialPosteriorFinalException;
+import br.ufal.ic.p2.wepayu.Exception.DataInvalidaException;
+import br.ufal.ic.p2.wepayu.TratamentoEntrada;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -7,19 +13,19 @@ import java.util.List;
 
 public class MembroSindicato {
 
-    protected int idMembro;
+    protected String idMembro;
     protected double taxaSindical;
 
     protected List<TaxaServico> taxas;
 
 
-    public MembroSindicato(int idMembro, double taxaSindical) {
+    public MembroSindicato(String idMembro, double taxaSindical) {
         this.idMembro = idMembro;
         this.taxaSindical = taxaSindical;
         taxas = new ArrayList<>();
     }
 
-    public int getIdMembro() {
+    public String getIdMembro() {
         return idMembro;
     }
 
@@ -31,21 +37,22 @@ public class MembroSindicato {
         return taxas;
     }
 
-    public void addNewTaxa (String data, String valor)
-    {
+    public void addNewTaxa (String data, String valor) throws DataInvalidaException {
         taxas.add(new TaxaServico(data, Double.parseDouble(valor)));
     }
 
-    public double getTaxasServico(String dataInicial, String dataFinal)
-    {
+    public double getTaxasServico(String dataInicial, String dataFinal) throws DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException {
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        LocalDate dataInicialF = LocalDate.parse(dataInicial, formatter);
-        LocalDate dataFinalF = LocalDate.parse(dataFinal, formatter);
+        TratamentoEntrada entrada = new TratamentoEntrada();
+
+        LocalDate dataInicialF = entrada.checkData(dataInicial, true);
+        LocalDate dataFinalF = entrada.checkData(dataFinal, false);
+        if (dataInicialF.isAfter(dataFinalF)) throw new DataInicialPosteriorFinalException();
+
         double total = 0;
         for (TaxaServico taxa : taxas) {
             LocalDate dataTaxa = taxa.getData();
-            if (dataTaxa.isAfter(dataInicialF) && dataTaxa.isBefore(dataFinalF))
+            if (dataTaxa.isAfter(dataInicialF.minusDays(1)) && dataTaxa.isBefore(dataFinalF))
                 total += taxa.getValor();
         }
         return total;

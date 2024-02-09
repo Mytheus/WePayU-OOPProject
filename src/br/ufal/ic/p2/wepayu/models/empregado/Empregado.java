@@ -1,6 +1,6 @@
 package br.ufal.ic.p2.wepayu.models.empregado;
 
-import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteException;
+import br.ufal.ic.p2.wepayu.Exception.*;
 import br.ufal.ic.p2.wepayu.models.pagamento.MetodoPagamento;
 import br.ufal.ic.p2.wepayu.models.sindicato.MembroSindicato;
 import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.Banco;
@@ -12,6 +12,8 @@ import java.time.format.DateTimeFormatter;
 
 public class Empregado {
 
+
+    protected String id;
     protected String nome;
     protected String endereco;
     protected String tipo;
@@ -24,12 +26,21 @@ public class Empregado {
     protected MetodoPagamento metodoPagamento;
 
 
-    public Empregado(String nome, String endereco, String tipo, double salario) throws EmpregadoNaoExisteException {
+    public Empregado(String id, String nome, String endereco, String tipo, String salario)
+            throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
+        this.id = id;
+        if (nome.isEmpty()) throw new NomeNaoPodeSerNuloException();
         this.nome = nome;
+        if (endereco.isEmpty()) throw new EnderecoNaoPodeSerNuloException();
         this.endereco = endereco;
         this.tipo = tipo;
-        this.salario = salario;
-        sindicalizado = false;
+        this.salario = Double.parseDouble(salario);
+        this.metodoPagamento = new EmMaos();
+        this.sindicalizado = false;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getNome() {
@@ -73,20 +84,20 @@ public class Empregado {
     }
     public void setSindicalizado(boolean sindicalizado, String idSindicato, String taxaSindical) {
         this.sindicalizado = sindicalizado;
-        membroSindicato = new MembroSindicato(Integer.parseInt(idSindicato), Double.parseDouble(taxaSindical));
+        membroSindicato = new MembroSindicato(idSindicato, Double.parseDouble(taxaSindical));
     }
     public MembroSindicato getSindicato() {
         return membroSindicato;
     }
 
-    public void addNewTaxaServico(String data, String valor)
-    {
+    public void addNewTaxaServico(String data, String valor) throws DataInvalidaException {
         membroSindicato.addNewTaxa(data, valor);
     }
 
     public String getMetodoPagamento() {
-        return metodoPagamento.getMetodoPagamento();
+        return this.metodoPagamento.getMetodoPagamento();
     }
+    public MetodoPagamento getObjMetodoPagamento() { return this.metodoPagamento;}
 
     public void setMetodoPagamento(String valor1, String banco, String agencia, String contaCorrente)
     {
@@ -94,7 +105,7 @@ public class Empregado {
     }
     public void setMetodoPagamento(String valor1)
     {
-        if (valor1.equals("emmaos"))
+        if (valor1.equals("emMaos"))
         {
             metodoPagamento = new EmMaos();
         }
@@ -104,8 +115,7 @@ public class Empregado {
         }
     }
 
-    public double getTaxasServico(String dataInicial, String dataFinal)
-    {
+    public double getTaxasServico(String dataInicial, String dataFinal) throws DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException {
         return membroSindicato.getTaxasServico(dataInicial, dataFinal);
     }
 
