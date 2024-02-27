@@ -6,13 +6,9 @@ import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoAssalariado;
 import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoComissionado;
 import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoHorista;
 import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.Banco;
-import br.ufal.ic.p2.wepayu.utils.ListaEmpregados;
-import br.ufal.ic.p2.wepayu.utils.Persistence;
-import br.ufal.ic.p2.wepayu.utils.TratamentoEntrada;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.AnyTypePermission;
 
-import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -22,13 +18,15 @@ import java.time.temporal.TemporalAdjusters;
 
 public class BusinessLogic {
 
-        static protected int idEmpregado;
+
+
+    static protected int idEmpregado;
         protected Persistence persistence;
 
         protected XStream xstream;
 
         public BusinessLogic() {
-            this.persistence = new Persistence("C:\\Users\\mathe\\Downloads\\WePayU\\XMLFiles\\empregados.xml");
+            this.persistence = new Persistence("XMLFiles\\empregados.xml");
             xstream = new XStream();
             xstream.alias("empregado", Empregado.class);
             xstream.alias("empregadoHorista", EmpregadoHorista.class);
@@ -39,10 +37,13 @@ public class BusinessLogic {
             xstream.addImplicitCollection(ListaEmpregados.class, "list");
         }
 
+    private String getIdEmpregado() {
+        return Integer.toString(idEmpregado);
+    }
 
         public void zerarSistema()
         {
-            this.persistence = new Persistence("C:\\Users\\mathe\\Downloads\\WePayU\\XMLFiles\\empregados.xml");
+            this.persistence = new Persistence("XMLFiles\\empregados.xml");
             idEmpregado = 0;
             persistence.createXMLFile();
             xstream = new XStream();
@@ -57,114 +58,145 @@ public class BusinessLogic {
         public void encerrarSistema()
         {
         }
+
+
+        private void addEmpregadoXML(Empregado e)
+        {
+            String xml = persistence.readXMLFile();
+            ListaEmpregados list;
+            if (!xml.isEmpty()) list = (ListaEmpregados)xstream.fromXML(xml);
+            else list = new ListaEmpregados();
+            list.add(e);
+            xml = xstream.toXML(list);
+            persistence.writeToXMLFile(xml);
+        }
+        private ListaEmpregados readXML()
+        {
+            String xml = persistence.readXMLFile();
+
+            return (!xml.isEmpty()? (ListaEmpregados) xstream.fromXML(xml): null);
+        }
+
+        private void writeToXML(ListaEmpregados empregados)
+        {
+            persistence.writeToXMLFile(xstream.toXML(empregados));
+        }
+
+        private String formatDoubleOutput(double value)
+        {
+            return String.format("%,.2f", value).replace(".", "");
+        }
+
+
+        //Função para empregado assalariado e horista
         public String criarEmpregado (String nome, String endereco, String tipo, String salario) throws
                 EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException,
                 SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException,
                 ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException
         {
+            //Declara empregado
             Empregado e;
-            salario = salario.replace(",", ".");
-            String id = Integer.toString(idEmpregado);
+            //Armazena id
+            String id = getIdEmpregado();
+            //Verifica a entrada
             TratamentoEntrada entrada = new TratamentoEntrada(id, nome, endereco, tipo, salario);
             entrada.fullCheckCriarEmpregado();
-            //System.out.println(salario);
+            //Cria classe a partir do tipo
             if (tipo.equals("horista"))
             {
                 e = new EmpregadoHorista(id ,nome, endereco, tipo, salario);
-            } else
+            }
+            else
             {
                 e = new EmpregadoAssalariado(id, nome, endereco, tipo, salario);
             }
-            String xml = persistence.readXMLFile();
-            ListaEmpregados list;
-            if (!xml.isEmpty()) list = (ListaEmpregados)xstream.fromXML(xml);
-            else list = new ListaEmpregados();
-            list.add(e);
-            xml = xstream.toXML(list);
-            persistence.writeToXMLFile(xml);
-            //empregados.add(idEmpregado, e);
-            return Integer.toString(idEmpregado++);
+            //Adiciona ao xml
+            addEmpregadoXML(e);
+            //Incrementa id e retorna
+            String idAtual = getIdEmpregado();
+            idEmpregado++;
+            return idAtual;
         }
+
+        //Função para empregado comissionado
         public String criarEmpregado (String nome, String endereco, String tipo, String salario, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException, ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException {
+            //Declara empregado
             Empregado e;
-            String id = Integer.toString(idEmpregado);
-            salario = salario.replace(",", ".");
-            comissao = comissao.replace(",", ".");
+            //Armazena id
+            String id = getIdEmpregado();
+            //Tratamento de entrada
             TratamentoEntrada entrada = new TratamentoEntrada(id, nome, endereco, tipo, salario, comissao);
             entrada.fullCheckCriarEmpregado();
-            //System.out.println(salario);
-            //System.out.println(comissao);
+            //Cria novo empregado comissionado
             e = new EmpregadoComissionado(id, nome, endereco, tipo, salario,
                     comissao);
-            String xml = persistence.readXMLFile();
-            ListaEmpregados list;
-            if (!xml.isEmpty()) list = (ListaEmpregados)xstream.fromXML(xml);
-            else list = new ListaEmpregados();
-            list.add(e);
-            xml = xstream.toXML(list);
-            persistence.writeToXMLFile(xml);
-            return Integer.toString(idEmpregado++);
+            //Adiciona ao xml
+            addEmpregadoXML(e);
+            //Incrementa id e retorna
+            String idAtual = getIdEmpregado();
+            idEmpregado++;
+            return idAtual;
         }
 
         public String getAtributoEmpregado(String emp, String atributo) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, AtributoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, EmpregadoNaoRecebeBancoException, EmpregadoNaoSindicalizadoException {
-            String xml = persistence.readXMLFile();
-            //System.out.println(xml);
-            ListaEmpregados list;
-            if(!xml.isEmpty())  list = (ListaEmpregados) xstream.fromXML(xml);
-            else list = new ListaEmpregados();
-            //System.out.println(list.size());
-            Empregado e = null;
+            //Acessa lista de empregados
+            ListaEmpregados list = readXML();
+            if (list == null) list = new ListaEmpregados();
+            //Declara empregado
+            Empregado e;
+            //Tratamento de entrada
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
             entrada.fullCheckGetAtributo(atributo);
-            e = list.searchEmpregado(emp);
-            entrada = new TratamentoEntrada(emp, e.getTipo());
 
-            switch (atributo) {
-                case "nome" :
-                    return e.getNome();
-                case "endereco" :
-                    return e.getEndereco();
-                case "tipo" :
-                    return e.getTipo();
-                case "salario" :
-                    return String.format("%,.2f", e.getSalario()).replace(".", "");
-                case "sindicalizado" :
-                    return Boolean.toString(e.isSindicalizado());
-                case "metodoPagamento" :
-                    return e.getMetodoPagamento();
-                case "comissao" :
-                    entrada.checkTipoEmpregado("comissionado");
-                    return String.format("%,.2f",((EmpregadoComissionado) e).getTaxaDeComissao()).replace(".", "");
-                case "banco":
+            //Procura por empregado
+            e = list.searchEmpregado(emp);
+
+            return switch (atributo) {
+                case "nome" -> e.getNome();
+                case "endereco" -> e.getEndereco();
+                case "tipo" -> e.getTipo();
+                case "salario" -> formatDoubleOutput(e.getSalario());
+                case "sindicalizado" -> Boolean.toString(e.isSindicalizado());
+                case "metodoPagamento" -> e.getMetodoPagamento();
+                case "comissao" -> {
+                    if (!e.getTipo().equals("comissionado")) throw new EmpregadoNaoComissionadoException();
+                    yield formatDoubleOutput(((EmpregadoComissionado) e).getTaxaDeComissao());
+                }
+                case "banco" -> {
                     if (!e.getMetodoPagamento().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
-                    return ((Banco) e.getObjMetodoPagamento()).getBanco();
-                case "idSindicato":
+                    yield ((Banco) e.getObjMetodoPagamento()).getBanco();
+                }
+                case "idSindicato" -> {
                     if (!e.isSindicalizado()) throw new EmpregadoNaoSindicalizadoException();
-                    return e.getSindicato().getIdMembro();
-                case "agencia":
+                    yield e.getSindicato().getIdMembro();
+                }
+                case "agencia" -> {
                     if (!e.getMetodoPagamento().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
-                    return ((Banco) e.getObjMetodoPagamento()).getAgencia();
-                case "contaCorrente":
+                    yield ((Banco) e.getObjMetodoPagamento()).getAgencia();
+                }
+                case "contaCorrente" -> {
                     if (!e.getMetodoPagamento().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
-                    return ((Banco) e.getObjMetodoPagamento()).getContaCorrente();
-                case "taxaSindical":
+                    yield ((Banco) e.getObjMetodoPagamento()).getContaCorrente();
+                }
+                case "taxaSindical" -> {
                     if (!e.isSindicalizado()) throw new EmpregadoNaoSindicalizadoException();
-                    return String.format("%,.2f", e.getSindicato().getTaxaSindical()).replace(".", "");
-                default:
-                    return "";
-            }
+                    yield formatDoubleOutput(e.getSindicato().getTaxaSindical());
+                }
+                default -> "";
+            };
         }
 
         public void alteraEmpregado(String emp, String atributo, String valor1) throws EmpregadoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, ValorTrueOuFalseException, MetodoPagamentoInvalidoException, ComissaoNaoPodeSerNulaException, ComissaoDeveSerNumericaException, ComissaoDeveSerNaoNegativaException, SalarioDeveSerNaoNegativoException, SalarioNaoPodeSerNuloException, SalarioDeveSerNumericoException, TipoNaoAplicavelException, TipoInvalidoException, EnderecoNaoPodeSerNuloException, NomeNaoPodeSerNuloException, AtributoNaoExisteException, IdEmpregadoNaoPodeSerNuloException {
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+            ListaEmpregados empregados = readXML();
 
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
             entrada.checkIdEmpregado();
 
+            assert empregados != null;
             Empregado e = empregados.searchEmpregado(emp);
 
             entrada = new TratamentoEntrada(emp, e.getTipo());
-            //System.out.println("Atributo: " +  atributo + ", Valor: " + valor1 + ", tipoAtual: " + e.getTipo());
+
             switch (atributo)
             {
                 case "nome":
@@ -181,7 +213,7 @@ public class BusinessLogic {
                     break;
                 case "salario":
                     entrada.checkSalario(valor1);
-                    e.setSalario(Double.parseDouble(valor1));
+                    e.setSalario(valor1);
                     break;
                 case "metodoPagamento":
                     entrada.checkMetodoPagamento(valor1);
@@ -189,187 +221,232 @@ public class BusinessLogic {
                     break;
                 case "comissao":
                     entrada.checkTipoEmpregado("comissionado");
-                    entrada.checkComissao(valor1.replace(",", "."));
-                    ((EmpregadoComissionado) e).setTaxaDeComissao(Double.parseDouble(valor1.replace(",", ".")));
+                    entrada.checkComissao(valor1);
+                    ((EmpregadoComissionado) e).setTaxaDeComissao(valor1);
                     break;
                 case "sindicalizado":
-                    if (valor1.equals("true") || valor1.equals("false")) e.setSindicalizado(Boolean.parseBoolean(valor1));
+                    if (valor1.equals("true") || valor1.equals("false")) e.setSindicalizado(valor1);
                     else throw new ValorTrueOuFalseException();
                     break;
                 default:
                     throw new AtributoNaoExisteException();
             }
             empregados.set(emp, e);
-            persistence.writeToXMLFile(xstream.toXML(empregados));
+            writeToXML(empregados);
         }
 
         public void alteraEmpregado(String emp, String atributo, boolean valor1, String idSindicato, String taxaSindical) throws EmpregadoNaoExisteException, HaOutroEmpregadoIdMembroException, TaxaSindicalNaoNulaException, TaxaSindicalNaoNegativaException, TaxaSindicalNumericaException, IdSindicatoNaoNuloException {
+
             TratamentoEntrada entrada = new TratamentoEntrada();
             entrada.checkAlteraAtributoSindical(taxaSindical, idSindicato);
-            taxaSindical = taxaSindical.replace(",", ".");
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+
+            ListaEmpregados empregados = readXML();
+
+            assert empregados != null;
+
             Empregado e = empregados.searchEmpregado(emp);
             empregados.checkMembroId(idSindicato);
+
             if (valor1)
             {
                 e.setSindicalizado(true, idSindicato, taxaSindical);
             }
             empregados.set(emp, e);
-            persistence.writeToXMLFile(xstream.toXML(empregados));
+
+            writeToXML(empregados);
         }
 
         public void alteraEmpregado(String emp, String atributo, String valor, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+
+            ListaEmpregados empregados = readXML();
+
+            assert empregados != null;
             Empregado e = empregados.searchEmpregado(emp);
-            if (valor.equals("comissionado")) {
-                if (e instanceof EmpregadoHorista || e instanceof EmpregadoAssalariado) {
-                    //System.out.println("Entra aqui");
+
+            if (valor.equals("comissionado"))
+            {
+                if (e.getTipo().equals("horista") || e.getTipo().equals("assalariado"))
+                {
+
                     e = new EmpregadoComissionado(e.getId(), e.getNome(), e.getEndereco(), valor,
-                            Double.toString(e.getSalario()), comissao.replace(",", "."));
-                } else {
+                            Double.toString(e.getSalario()), comissao);
+                }
+                else
+                {
                     e.setTipo("comissionado");
-                    ((EmpregadoComissionado) e).setTaxaDeComissao(Double.parseDouble(comissao.replace(",", ".")));
+                    ((EmpregadoComissionado) e).setTaxaDeComissao(comissao);
                 }
             }
             else if (valor.equals("horista"))
             {
-                if (e instanceof EmpregadoComissionado || e instanceof EmpregadoAssalariado) {
-                    //System.out.println("Entra aqui");
-                    e = new EmpregadoHorista(e.getId(), e.getNome(), e.getEndereco(), valor, comissao.replace(",", "."));
-                } else {
+                if (e.getTipo().equals("comissionado") || e.getTipo().equals("assalariado"))
+                {
+                    e = new EmpregadoHorista(e.getId(), e.getNome(), e.getEndereco(), valor, comissao);
+                }
+                else
+                {
                     e.setTipo("horista");
-                    ((EmpregadoHorista) e).setSalario(Double.parseDouble(comissao.replace(",", ".")));
+                    e.setSalario(comissao);
                 }
             }
+
             empregados.set(emp, e);
-            //System.out.println("aaa" + empregados.searchEmpregado(emp).getTipo());
-            persistence.writeToXMLFile(xstream.toXML(empregados));
+
+            writeToXML(empregados);
         }
 
 
         public void alteraEmpregado(String emp, String atributo, String valor1, String banco, String agencia,
                                     String contaCorrente) throws EmpregadoNaoExisteException, AgenciaNaoNuloException, ContaCorrenteNaoNuloException, BancoNaoNuloException {
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+            ListaEmpregados empregados = readXML();
+
+            assert empregados != null;
             Empregado e = empregados.searchEmpregado(emp);
+
             TratamentoEntrada entrada = new TratamentoEntrada();
             entrada.checkAlteraAtributosBanco(banco, agencia, contaCorrente);
 
-            e.setMetodoPagamento(valor1, banco, agencia, contaCorrente);
+            e.setMetodoPagamento(banco, agencia, contaCorrente);
 
             empregados.set(emp, e);
-            persistence.writeToXMLFile(xstream.toXML(empregados));
+            writeToXML(empregados);
         }
 
 
 
         public String getEmpregadoPorNome(String nome, int indice) throws NaoHaEmpregadoComEsseNomeException {
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
-            int iterator = 1;
-            Empregado e;
+            ListaEmpregados empregados = readXML();
+            assert empregados != null;
             return empregados.searchEmpregadoByName(nome, indice);
         }
 
         public void removerEmpregado (String emp) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException {
+
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
             entrada.checkIdEmpregado();
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+
+            ListaEmpregados empregados = readXML();
+            assert empregados != null;
             empregados.remove(emp);
-            persistence.writeToXMLFile(xstream.toXML(empregados));
+
+            writeToXML(empregados);
         }
 
         public void lancaCartao(String emp, String data, String horas) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoHoristaException, HorasDevemSerPositivasException, DataInvalidaException, EmpregadoNaoComissionadoException {
-            horas = horas.replace(",", ".");
+
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
             entrada.checkIdEmpregado();
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+
+            ListaEmpregados empregados = readXML();
+            assert empregados != null;
             Empregado e = empregados.searchEmpregado(emp);
+
             entrada = new TratamentoEntrada(e.getId(), e.getTipo());
             entrada.checkTipoEmpregado("horista");
             entrada.checkHoras(horas);
-            if (e instanceof EmpregadoHorista)
+
+            if (e.getTipo().equals("horista"))
             {
-                //System.out.println(data + " " + horas);
                 ((EmpregadoHorista) e).addNewPonto(data, horas);
                 empregados.set(emp, e);
             }
-            persistence.writeToXMLFile(xstream.toXML(empregados));
+            writeToXML(empregados);
         }
 
         public void lancaVenda(String emp, String data, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, DataInvalidaException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, ValorDeveSerPositivoException {
-            valor = valor.replace(",", ".");
+
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
             entrada.checkIdEmpregado();
             entrada.checkValorVenda(valor);
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+
+            ListaEmpregados empregados = readXML();
+            assert empregados != null;
             Empregado e = empregados.searchEmpregado(emp);
+
             entrada = new TratamentoEntrada(e.getId(), e.getTipo());
             entrada.checkTipoEmpregado("comissionado");
-            if (e instanceof EmpregadoComissionado)
+
+            if (e.getTipo().equals("comissionado"))
             {
                 ((EmpregadoComissionado) e).addNewVenda(data, valor);
                 empregados.set(emp, e);
             }
-            persistence.writeToXMLFile(xstream.toXML(empregados));
+
+            writeToXML(empregados);
         }
 
-        public void lancaTaxaServico(String membro, String data, String valor) throws EmpregadoNaoExisteException,
-                IdEmpregadoNaoPodeSerNuloException, DataInvalidaException, MembroNaoExisteException, IdMembroNaoPodeSerNulaException, ValorDeveSerPositivoException {
-            valor = valor.replace(",", ".");
+        public void lancaTaxaServico(String membro, String data, String valor) throws DataInvalidaException, MembroNaoExisteException, IdMembroNaoPodeSerNulaException, ValorDeveSerPositivoException {
+
             TratamentoEntrada entrada = new TratamentoEntrada(membro);
             entrada.checkIdMembro();
             entrada.checkValorVenda(valor);
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+
+            ListaEmpregados empregados = readXML();
+            assert empregados != null;
             Empregado e = empregados.searchEmpregadoMembro(membro);
+
             if (e.isSindicalizado())
             {
                 e.addNewTaxaServico(data, valor);
                 empregados.set(e.getId(), e);
             }
-            persistence.writeToXMLFile(xstream.toXML(empregados));
+            writeToXML(empregados);
+        }
+
+        private Empregado initGetServico(String emp, String tipo) throws IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException {
+            TratamentoEntrada entrada = new TratamentoEntrada(emp);
+            entrada.checkIdEmpregado();
+
+
+            ListaEmpregados empregados = readXML();
+            assert empregados != null;
+            Empregado e = empregados.searchEmpregado(emp);
+
+
+            entrada = new TratamentoEntrada(e.getId(), e.getTipo());
+            entrada.checkTipoEmpregado(tipo);
+            return e;
         }
 
         public String getVendasRealizadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException {
-            TratamentoEntrada entrada = new TratamentoEntrada(emp);
-            entrada.checkIdEmpregado();
+            String tipo = "comissionado";
+
+            Empregado e = initGetServico(emp, tipo);
+
             double totalVendas = 0;
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
-            Empregado e = empregados.searchEmpregado(emp);
-            entrada = new TratamentoEntrada(e.getId(), e.getTipo());
-            entrada.checkTipoEmpregado("comissionado");
-            if (e instanceof EmpregadoComissionado)
+            if (e.getTipo().equals(tipo))
             {
-                totalVendas = ((EmpregadoComissionado) empregados.searchEmpregado(emp)).getVendas(dataInicial,
+                totalVendas = ((EmpregadoComissionado) e).getVendas(dataInicial,
                         dataFinal);
             }
 
-            return String.format("%,.2f", totalVendas).replace(".", "");
+            return formatDoubleOutput(totalVendas);
         }
         public String getHorasNormaisTrabalhadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoHoristaException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoComissionadoException {
-            TratamentoEntrada entrada = new TratamentoEntrada(emp);
-            entrada.checkIdEmpregado();
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
-            Empregado e = empregados.searchEmpregado(emp);
-            //System.out.println(e.getNome());
-            entrada = new TratamentoEntrada(e.getId(), e.getTipo());
-            entrada.checkTipoEmpregado("horista");
+
+            String tipo = "horista";
+
+            Empregado e = initGetServico(emp, tipo);
+
             double totalHoras = 0;
-            if (e instanceof EmpregadoHorista)
-            {
+
+            if (e.getTipo().equals(tipo))
                 totalHoras = ((EmpregadoHorista) e).getHoras(dataInicial, dataFinal, false);
-            }
+
             return (totalHoras % 1 !=0 && totalHoras!=0? String.format("%,.1f", totalHoras):
                     Integer.toString((int)totalHoras));
         }
         public String getHorasExtrasTrabalhadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoHoristaException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoComissionadoException {
-            TratamentoEntrada entrada = new TratamentoEntrada(emp);
-            entrada.checkIdEmpregado();
+
+            String tipo = "horista";
+
+            Empregado e = initGetServico(emp, tipo);
+
             double totalHoras = 0;
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
-            Empregado e = empregados.searchEmpregado(emp);
-            entrada = new TratamentoEntrada(e.getId(), e.getTipo());
-            entrada.checkTipoEmpregado("horista");
-            if (e instanceof EmpregadoHorista)
+
+            if (e.getTipo().equals(tipo))
                 totalHoras = ((EmpregadoHorista) e).getHoras(dataInicial, dataFinal, true);
+
             return (totalHoras % 1 !=0 && totalHoras!=0? String.format("%,.1f", totalHoras):
                     Integer.toString((int)totalHoras));
         }
@@ -377,9 +454,13 @@ public class BusinessLogic {
         public String getTaxasServico(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoSindicalizadoException {
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
             entrada.checkIdEmpregado();
-            double totalTaxas = 0;
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+
+            double totalTaxas;
+
+            ListaEmpregados empregados = readXML();
+            assert empregados != null;
             Empregado e = empregados.searchEmpregado(emp);
+
             if (e.isSindicalizado())
                 totalTaxas = e.getTaxasServico(dataInicial, dataFinal);
             else {
@@ -387,13 +468,13 @@ public class BusinessLogic {
             }
 
 
-            return String.format("%,.2f", totalTaxas).replace(".", "");
+            return formatDoubleOutput(totalTaxas);
         }
 
 
 
 
-        public String totalFolha(String data) throws DataInvalidaException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException {
+        public String totalFolha(String data) throws DataInvalidaException, DataInicialPosteriorFinalException {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
             LocalDate dataF;
             LocalDate dataInicialComissionado;
@@ -408,38 +489,36 @@ public class BusinessLogic {
             double total = 0;
             for (Empregado e: empregados.getList())
             {
-                if (e instanceof EmpregadoHorista eh)
-                {
-                    if (dataF.getDayOfWeek()== DayOfWeek.FRIDAY)
-                    {
-                        total += eh.getHoras(dataF.minusDays(7), dataF, false) * eh.getSalario();
-                        total += eh.getHoras(dataF.minusDays(7), dataF, true) * eh.getSalario() * 1.5;
-                    }
-                }
-                if(e instanceof EmpregadoComissionado ec)
-                {
-                    if(dataF.getDayOfWeek() == DayOfWeek.FRIDAY)
-                    {
-                        if ((ChronoUnit.DAYS.between(dataInicialComissionado, dataF) + 1) % 14 == 0)
-                        {
-                            total += Math.floor(ec.getVendas(dataF.minusDays(13), dataF) * ec.getTaxaDeComissao()*100)/100d;
-                            total += Math.floor(ec.getSalario()*24/52*100)/100d;
+                switch (e.getTipo()) {
+                    case "horista" -> {
+                        EmpregadoHorista eh = (EmpregadoHorista) e;
+                        if (dataF.getDayOfWeek() == DayOfWeek.FRIDAY) {
+                            total += eh.getHoras(dataF.minusDays(7), dataF, false) * eh.getSalario();
+                            total += eh.getHoras(dataF.minusDays(7), dataF, true) * eh.getSalario() * 1.5;
                         }
                     }
-                }
-                if(e instanceof EmpregadoAssalariado ea)
-                {
-                    if(dataF.with(TemporalAdjusters.lastDayOfMonth()).getDayOfMonth() == dataF.getDayOfMonth())
-                    {
-                        total+= ea.getSalario();
+                    case "comissionado" -> {
+                        EmpregadoComissionado ec = (EmpregadoComissionado) e;
+                        if (dataF.getDayOfWeek() == DayOfWeek.FRIDAY) {
+                            if ((ChronoUnit.DAYS.between(dataInicialComissionado, dataF) + 1) % 14 == 0) {
+                                total += Math.floor(ec.getVendas(dataF.minusDays(13), dataF) * ec.getTaxaDeComissao() * 100) / 100d;
+                                total += Math.floor(ec.getSalario() * 24 / 52 * 100) / 100d;
+                            }
+                        }
+                    }
+                    case "assalariado" -> {
+                        EmpregadoAssalariado ea = (EmpregadoAssalariado) e;
+                        if (dataF.with(TemporalAdjusters.lastDayOfMonth()).getDayOfMonth() == dataF.getDayOfMonth()) {
+                            total += ea.getSalario();
+                        }
                     }
                 }
             }
             return String.format("%,.2f",total).replace(".", "");
         }
 
-        public void rodaFolha(String data, String saida) throws DataInicialInvalidaException, DataFinalInvalidaException, DataInvalidaException, DataInicialPosteriorFinalException, IOException {
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+        public void rodaFolha(String data, String saida) {
+            /*ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
             LocalDate dataF;
             LocalDate dataInicialComissionado;
@@ -457,7 +536,7 @@ public class BusinessLogic {
             persistence.readWriteToFile("folhaPagamentoCabecalhos\\horista.txt");
             for (Empregado e: empregados.getList())
             {
-                if (e instanceof EmpregadoHorista)
+                if (e.getTipo().equals("horista"))
                 {
                     String info = ((EmpregadoHorista) e).getInfo(dataF);
                     persistence.appendToFile(info);
@@ -465,6 +544,6 @@ public class BusinessLogic {
             }
             persistence.readWriteToFile("folhaPagamentoCabecalhos\\assalariado.txt");
             persistence.readWriteToFile("folhaPagamentoCabecalhos\\comissionado.txt");
-            persistence.appendToFile(String.format("TOTAL FOLHA: %s", totalFolha(data)));
+            persistence.appendToFile(String.format("TOTAL FOLHA: %s", totalFolha(data)));*/
         }
     }

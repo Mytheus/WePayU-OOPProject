@@ -6,10 +6,8 @@ import br.ufal.ic.p2.wepayu.models.CartaoDePonto;
 import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class EmpregadoHorista extends Empregado {
 
@@ -23,6 +21,26 @@ public class EmpregadoHorista extends Empregado {
         pontos.add(new CartaoDePonto(data, horas));
     }
 
+    private double totalHoras(boolean extras, LocalDate dataInicialF, LocalDate dataFinalF) {
+        double total = 0;
+        for (CartaoDePonto ponto : pontos) {
+            LocalDate dataHoras = ponto.getData();
+            double horas = ponto.getHoras();
+
+
+            if (dataHoras.isAfter(dataInicialF.minusDays(1)) && dataHoras.isBefore(dataFinalF)) {
+                if (extras) {
+                    if (horas > 8) {
+                        total += horas - 8;
+                    }
+                } else {
+                    total += ((horas > 8) ? 8 : horas);
+                }
+            }
+        }
+        return total;
+    }
+
     public double getHoras(String dataInicial, String dataFinal, boolean extras) throws DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException {
 
         TratamentoEntrada entrada = new TratamentoEntrada();
@@ -31,50 +49,22 @@ public class EmpregadoHorista extends Empregado {
         LocalDate dataFinalF = entrada.checkData(dataFinal, false);
 
         if (dataInicialF.isAfter(dataFinalF)) throw new DataInicialPosteriorFinalException();
-        double total = 0;
 
-        for (CartaoDePonto ponto : pontos) {
-            LocalDate dataHoras = ponto.getData();
-            double horas = Double.parseDouble(ponto.getHoras());;
-
-            if (dataHoras.isAfter(dataInicialF.minusDays(1)) && dataHoras.isBefore(dataFinalF)) {
-                if (extras) {
-                    if (horas > 8) {
-                        total += horas - 8;
-                    }
-                } else {
-                    total += ((horas > 8) ? 8 : horas);
-                }
-            }
-        }
-        return total;
+        return totalHoras(extras, dataInicialF, dataFinalF);
     }
 
-    public double getHoras(LocalDate dataInicialF, LocalDate dataFinalF, boolean extras) throws DataInicialInvalidaException,
-            DataFinalInvalidaException, DataInicialPosteriorFinalException {
+
+
+    public double getHoras(LocalDate dataInicialF, LocalDate dataFinalF, boolean extras) throws
+            DataInicialPosteriorFinalException {
 
 
         if (dataInicialF.isAfter(dataFinalF)) throw new DataInicialPosteriorFinalException();
-        double total = 0;
 
-        for (CartaoDePonto ponto : pontos) {
-            LocalDate dataHoras = ponto.getData();
-            double horas = Double.parseDouble(ponto.getHoras());;
-
-            if (dataHoras.isAfter(dataInicialF.minusDays(1)) && dataHoras.isBefore(dataFinalF)) {
-                if (extras) {
-                    if (horas > 8) {
-                        total += horas - 8;
-                    }
-                } else {
-                    total += ((horas > 8) ? 8 : horas);
-                }
-            }
-        }
-        return total;
+        return totalHoras(extras, dataInicialF, dataFinalF);
     }
 
-    public String getInfo(LocalDate data) throws DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException {
+    public String getInfo(LocalDate data) throws DataInicialPosteriorFinalException {
         String nome = this.nome;
         int horas = (int)this.getHoras(data.minusDays(7), data, false);
         int extra = (int)(this.getHoras(data.minusDays(7), data, true));

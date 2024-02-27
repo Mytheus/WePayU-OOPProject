@@ -9,7 +9,7 @@ public class ResultadoDeVenda {
     protected LocalDate data;
     protected double valor;
 
-    public ResultadoDeVenda(String data, double valor) throws DataInvalidaException {
+    public ResultadoDeVenda(String data, String valor) throws DataInvalidaException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
         try{
         this.data = LocalDate.parse(data, formatter);}
@@ -17,7 +17,7 @@ public class ResultadoDeVenda {
         {
             throw new DataInvalidaException();
         }
-        this.valor = valor;
+        this.valor = Double.parseDouble(valor.replace(",", "."));
     }
 
     public LocalDate getData() {

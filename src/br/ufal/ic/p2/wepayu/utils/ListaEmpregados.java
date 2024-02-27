@@ -16,10 +16,10 @@ public class ListaEmpregados {
         return list;
     }
 
-    private List<Empregado> list;
+    private final List<Empregado> list;
 
     public ListaEmpregados(){
-        list = new ArrayList<Empregado>();
+        list = new ArrayList<>();
     }
 
     public void add(Empregado e){
@@ -29,10 +29,6 @@ public class ListaEmpregados {
     public int size()
     {
         return list.size();
-    }
-    public Empregado getByIndex(int index)
-    {
-        return this.list.get(index);
     }
 
 
@@ -69,7 +65,7 @@ public class ListaEmpregados {
         }
         throw new NaoHaEmpregadoComEsseNomeException();
     }
-    public Empregado searchEmpregadoMembro(String membro) throws EmpregadoNaoExisteException, MembroNaoExisteException {
+    public Empregado searchEmpregadoMembro(String membro) throws MembroNaoExisteException {
         for (int i = 0; i < this.size(); i++)
         {
             if (this.list.get(i).isSindicalizado())

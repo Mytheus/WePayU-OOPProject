@@ -2,7 +2,6 @@ package br.ufal.ic.p2.wepayu.utils;
 
 import br.ufal.ic.p2.wepayu.Exception.EnderecoNaoPodeSerNuloException;
 import br.ufal.ic.p2.wepayu.Exception.NomeNaoPodeSerNuloException;
-import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
 
@@ -27,7 +26,7 @@ public class TratamentoEntrada {
         this.nome = nome;
         this.endereco = endereco;
         this.tipo = tipo;
-        this.salario = salario;
+        this.salario = salario.replace(",", ".");
         this.taxaDeComissao = null;
     }
     public TratamentoEntrada (String id, String nome, String endereco, String tipo, String salario,
@@ -37,8 +36,8 @@ public class TratamentoEntrada {
         this.nome = nome;
         this.endereco = endereco;
         this.tipo = tipo;
-        this.salario = salario;
-        this.taxaDeComissao = taxaDeComissao;
+        this.salario = salario.replace(",", ".");
+        this.taxaDeComissao = taxaDeComissao.replace(",", ".");
     }
 
     public TratamentoEntrada (String id, String tipo)
@@ -143,10 +142,10 @@ public class TratamentoEntrada {
     }
 
     public void checkComissao(String taxaComissao) throws ComissaoNaoPodeSerNulaException, ComissaoDeveSerNumericaException, ComissaoDeveSerNaoNegativaException {
-        this.taxaDeComissao = taxaComissao;
-        if (taxaComissao!= null && comissaoNula()) throw new ComissaoNaoPodeSerNulaException();
-        else if (taxaComissao!= null && comissaoNaoNumerico()) throw new ComissaoDeveSerNumericaException();
-        else if (taxaComissao!= null && comissaoNegativo()) throw new ComissaoDeveSerNaoNegativaException();
+        this.taxaDeComissao = taxaComissao.replace(",", ".");
+        if (comissaoNula()) throw new ComissaoNaoPodeSerNulaException();
+        else if (comissaoNaoNumerico()) throw new ComissaoDeveSerNumericaException();
+        else if (comissaoNegativo()) throw new ComissaoDeveSerNaoNegativaException();
     }
 
     public void checkSalario(String salario) throws SalarioNaoPodeSerNuloException, SalarioDeveSerNumericoException, SalarioDeveSerNaoNegativoException {
@@ -237,7 +236,7 @@ public class TratamentoEntrada {
     }
 
     public void checkValorVenda(String valor) throws ValorDeveSerPositivoException {
-        if (Double.parseDouble(valor) <=0) throw new ValorDeveSerPositivoException();
+        if (Double.parseDouble(valor.replace(",", ".")) <=0) throw new ValorDeveSerPositivoException();
     }
 
     public void checkAlteraAtributoSindical(String taxaSindical, String idSindicato) throws TaxaSindicalNaoNegativaException, TaxaSindicalNumericaException, TaxaSindicalNaoNulaException, IdSindicatoNaoNuloException {

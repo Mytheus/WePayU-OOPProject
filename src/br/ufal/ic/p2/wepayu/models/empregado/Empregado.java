@@ -2,13 +2,10 @@ package br.ufal.ic.p2.wepayu.models.empregado;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
 import br.ufal.ic.p2.wepayu.models.pagamento.MetodoPagamento;
-import br.ufal.ic.p2.wepayu.models.sindicato.MembroSindicato;
 import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.Banco;
 import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.Correios;
 import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.EmMaos;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import br.ufal.ic.p2.wepayu.models.sindicato.MembroSindicato;
 
 public class Empregado {
 
@@ -34,7 +31,7 @@ public class Empregado {
         if (endereco.isEmpty()) throw new EnderecoNaoPodeSerNuloException();
         this.endereco = endereco;
         this.tipo = tipo;
-        this.salario = Double.parseDouble(salario);
+        this.salario = Double.parseDouble(salario.replace(",", "."));
         this.metodoPagamento = new EmMaos();
         this.sindicalizado = false;
     }
@@ -74,17 +71,27 @@ public class Empregado {
     public void setSalario(double salario) {
         this.salario = salario;
     }
+    public void setSalario(String salario) {
+        this.salario = Double.parseDouble(salario.replace(",", "."));
+    }
 
     public boolean isSindicalizado() {
         return sindicalizado;
     }
 
-    public void setSindicalizado(boolean sindicalizado) {
+    public void setSindicalizado(String sindicalizado) {
+        this.sindicalizado = Boolean.parseBoolean(sindicalizado);
+    }
+    public void setSindicalizado(Boolean sindicalizado) {
         this.sindicalizado = sindicalizado;
     }
     public void setSindicalizado(boolean sindicalizado, String idSindicato, String taxaSindical) {
         this.sindicalizado = sindicalizado;
-        membroSindicato = new MembroSindicato(idSindicato, Double.parseDouble(taxaSindical));
+        membroSindicato = new MembroSindicato(idSindicato, taxaSindical);
+    }
+    public void setSindicalizado(String sindicalizado, String idSindicato, String taxaSindical) {
+        this.sindicalizado = Boolean.parseBoolean(sindicalizado);
+        membroSindicato = new MembroSindicato(idSindicato, taxaSindical);
     }
     public MembroSindicato getSindicato() {
         return membroSindicato;
@@ -99,9 +106,9 @@ public class Empregado {
     }
     public MetodoPagamento getObjMetodoPagamento() { return this.metodoPagamento;}
 
-    public void setMetodoPagamento(String valor1, String banco, String agencia, String contaCorrente)
+    public void setMetodoPagamento(String banco, String agencia, String contaCorrente)
     {
-        metodoPagamento = new Banco(banco, agencia, contaCorrente);
+        this.metodoPagamento = new Banco(banco, agencia, contaCorrente);
     }
     public void setMetodoPagamento(String valor1)
     {

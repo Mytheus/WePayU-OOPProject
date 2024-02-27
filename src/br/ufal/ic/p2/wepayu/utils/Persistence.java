@@ -16,10 +16,6 @@ public class Persistence {
     }
 
 
-    public String getPath() {
-        return path;
-    }
-
     public void createXMLFile()
     {
         try {

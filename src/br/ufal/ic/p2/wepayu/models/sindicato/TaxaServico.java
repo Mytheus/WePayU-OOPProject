@@ -11,14 +11,14 @@ public class TaxaServico {
     protected LocalDate data;
     protected double valor;
 
-    public TaxaServico(String data, double valor) throws DataInvalidaException {
+    public TaxaServico(String data, String valor) throws DataInvalidaException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
         try {this.data = LocalDate.parse(data, formatter);}
         catch (DateTimeParseException e)
         {
             throw new DataInvalidaException();
         }
-        this.valor = valor;
+        this.valor = Double.parseDouble(valor.replace(",", "."));
     }
 
     public LocalDate getData() {

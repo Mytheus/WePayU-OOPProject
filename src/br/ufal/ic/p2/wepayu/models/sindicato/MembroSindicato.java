@@ -18,9 +18,9 @@ public class MembroSindicato {
     protected List<TaxaServico> taxas;
 
 
-    public MembroSindicato(String idMembro, double taxaSindical) {
+    public MembroSindicato(String idMembro, String taxaSindical) {
         this.idMembro = idMembro;
-        this.taxaSindical = taxaSindical;
+        this.taxaSindical = Double.parseDouble(taxaSindical.replace(",", "."));
         taxas = new ArrayList<>();
     }
 
@@ -37,7 +37,7 @@ public class MembroSindicato {
     }
 
     public void addNewTaxa (String data, String valor) throws DataInvalidaException {
-        taxas.add(new TaxaServico(data, Double.parseDouble(valor)));
+        taxas.add(new TaxaServico(data, valor));
     }
 
     public double getTaxasServico(String dataInicial, String dataFinal) throws DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException {
