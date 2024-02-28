@@ -6,6 +6,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 public class ResultadoDeVenda {
+
+
     protected LocalDate data;
     protected double valor;
 
@@ -20,6 +22,9 @@ public class ResultadoDeVenda {
         this.valor = Double.parseDouble(valor.replace(",", "."));
     }
 
+    public ResultadoDeVenda() {
+    }
+
     public LocalDate getData() {
         return data;
     }
@@ -28,4 +33,11 @@ public class ResultadoDeVenda {
         return valor;
     }
 
+    public void setData(LocalDate data) {
+        this.data = data;
+    }
+
+    public void setValor(double valor) {
+        this.valor = valor;
+    }
 }

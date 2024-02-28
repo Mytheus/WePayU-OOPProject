@@ -6,9 +6,12 @@ import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoAssalariado;
 import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoComissionado;
 import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoHorista;
 import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.Banco;
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.security.AnyTypePermission;
 
+import java.beans.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -18,23 +21,13 @@ import java.time.temporal.TemporalAdjusters;
 
 public class BusinessLogic {
 
-
+    private final static String FILEPATH = "XMLFiles\\empregados.xml";
 
     static protected int idEmpregado;
-        protected Persistence persistence;
 
-        protected XStream xstream;
 
         public BusinessLogic() {
-            this.persistence = new Persistence("XMLFiles\\empregados.xml");
-            xstream = new XStream();
-            xstream.alias("empregado", Empregado.class);
-            xstream.alias("empregadoHorista", EmpregadoHorista.class);
-            xstream.alias("empregadoComissionado", EmpregadoComissionado.class);
-            xstream.alias("empregadoAssalariado", EmpregadoAssalariado.class);
-            xstream.alias("empregados", ListaEmpregados.class);
-            xstream.addPermission(AnyTypePermission.ANY);
-            xstream.addImplicitCollection(ListaEmpregados.class, "list");
+
         }
 
     private String getIdEmpregado() {
@@ -43,43 +36,68 @@ public class BusinessLogic {
 
         public void zerarSistema()
         {
-            this.persistence = new Persistence("XMLFiles\\empregados.xml");
+
             idEmpregado = 0;
-            persistence.createXMLFile();
-            xstream = new XStream();
-            xstream.alias("empregado", Empregado.class);
-            xstream.alias("empregadoHorista", EmpregadoHorista.class);
-            xstream.alias("empregadoComissionado", EmpregadoComissionado.class);
-            xstream.alias("empregadoAssalariado", EmpregadoAssalariado.class);
-            xstream.alias("empregados", ListaEmpregados.class);
-            xstream.addPermission(AnyTypePermission.ANY);
-            xstream.addImplicitCollection(ListaEmpregados.class, "list");
+            File file = new File(FILEPATH);
+            if (file.exists()) file.delete();
+
         }
         public void encerrarSistema()
         {
         }
 
 
-        private void addEmpregadoXML(Empregado e)
-        {
-            String xml = persistence.readXMLFile();
-            ListaEmpregados list;
-            if (!xml.isEmpty()) list = (ListaEmpregados)xstream.fromXML(xml);
-            else list = new ListaEmpregados();
-            list.add(e);
-            xml = xstream.toXML(list);
-            persistence.writeToXMLFile(xml);
+        private void addEmpregadoXML(Empregado e) throws IOException {
+            ListaEmpregados empregados;
+            File file = new File(FILEPATH);
+            if (!file.exists()) file.createNewFile();
+            if(file.length()==0) empregados = new ListaEmpregados();
+            else
+            {
+                FileInputStream fis = new FileInputStream(FILEPATH);
+                XMLDecoder decoder = new XMLDecoder(fis);
+                empregados = (ListaEmpregados) decoder.readObject();
+                decoder.close();
+                fis.close();
+            }
+            empregados.add(e);
+            FileOutputStream fos = new FileOutputStream(FILEPATH);
+            XMLEncoder encoder = new XMLEncoder(fos);
+            encoder.writeObject(empregados);
+            encoder.close();
+            fos.close();
         }
-        private ListaEmpregados readXML()
-        {
-            String xml = persistence.readXMLFile();
-
-            return (!xml.isEmpty()? (ListaEmpregados) xstream.fromXML(xml): null);
+        private ListaEmpregados readXML() throws IOException {
+            ListaEmpregados empregados;
+            File file = new File(FILEPATH);
+            if(file.length()==0 || !file.exists()) return new ListaEmpregados();
+            else
+            {
+                FileInputStream fis = new FileInputStream(FILEPATH);
+                XMLDecoder decoder = new XMLDecoder(fis);
+                empregados = (ListaEmpregados) decoder.readObject();
+                decoder.close();
+                fis.close();
+            }
+            return empregados;
         }
 
-        private void writeToXML(ListaEmpregados empregados)
-        {
-            persistence.writeToXMLFile(xstream.toXML(empregados));
+        private void writeToXML(ListaEmpregados empregados) throws IOException {
+            FileOutputStream fos = new FileOutputStream(FILEPATH);
+            XMLEncoder encoder = new XMLEncoder(fos);
+            encoder.setPersistenceDelegate(LocalDate.class,
+                    new PersistenceDelegate() {
+                        @Override
+                        protected Expression instantiate(Object localDate, Encoder encdr) {
+                            return new Expression(localDate,
+                                    LocalDate.class,
+                                    "parse",
+                                    new Object[]{localDate.toString()});
+                        }
+                    });
+            encoder.writeObject(empregados);
+            encoder.close();
+            fos.close();
         }
 
         private String formatDoubleOutput(double value)
@@ -92,8 +110,7 @@ public class BusinessLogic {
         public String criarEmpregado (String nome, String endereco, String tipo, String salario) throws
                 EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException,
                 SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException,
-                ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException
-        {
+                ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException {
             //Declara empregado
             Empregado e;
             //Armazena id
@@ -119,7 +136,7 @@ public class BusinessLogic {
         }
 
         //Função para empregado comissionado
-        public String criarEmpregado (String nome, String endereco, String tipo, String salario, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException, ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException {
+        public String criarEmpregado (String nome, String endereco, String tipo, String salario, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException, ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException {
             //Declara empregado
             Empregado e;
             //Armazena id
@@ -138,7 +155,7 @@ public class BusinessLogic {
             return idAtual;
         }
 
-        public String getAtributoEmpregado(String emp, String atributo) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, AtributoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, EmpregadoNaoRecebeBancoException, EmpregadoNaoSindicalizadoException {
+        public String getAtributoEmpregado(String emp, String atributo) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, AtributoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, EmpregadoNaoRecebeBancoException, EmpregadoNaoSindicalizadoException, IOException {
             //Acessa lista de empregados
             ListaEmpregados list = readXML();
             if (list == null) list = new ListaEmpregados();
@@ -157,36 +174,36 @@ public class BusinessLogic {
                 case "tipo" -> e.getTipo();
                 case "salario" -> formatDoubleOutput(e.getSalario());
                 case "sindicalizado" -> Boolean.toString(e.isSindicalizado());
-                case "metodoPagamento" -> e.getMetodoPagamento();
+                case "metodoPagamento" -> e.getMetodoPagamentoName();
                 case "comissao" -> {
                     if (!e.getTipo().equals("comissionado")) throw new EmpregadoNaoComissionadoException();
                     yield formatDoubleOutput(((EmpregadoComissionado) e).getTaxaDeComissao());
                 }
                 case "banco" -> {
-                    if (!e.getMetodoPagamento().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
+                    if (!e.getMetodoPagamentoName().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
                     yield ((Banco) e.getObjMetodoPagamento()).getBanco();
                 }
                 case "idSindicato" -> {
                     if (!e.isSindicalizado()) throw new EmpregadoNaoSindicalizadoException();
-                    yield e.getSindicato().getIdMembro();
+                    yield e.getMembroSindicato().getIdMembro();
                 }
                 case "agencia" -> {
-                    if (!e.getMetodoPagamento().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
+                    if (!e.getMetodoPagamentoName().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
                     yield ((Banco) e.getObjMetodoPagamento()).getAgencia();
                 }
                 case "contaCorrente" -> {
-                    if (!e.getMetodoPagamento().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
+                    if (!e.getMetodoPagamentoName().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
                     yield ((Banco) e.getObjMetodoPagamento()).getContaCorrente();
                 }
                 case "taxaSindical" -> {
                     if (!e.isSindicalizado()) throw new EmpregadoNaoSindicalizadoException();
-                    yield formatDoubleOutput(e.getSindicato().getTaxaSindical());
+                    yield formatDoubleOutput(e.getMembroSindicato().getTaxaSindical());
                 }
                 default -> "";
             };
         }
 
-        public void alteraEmpregado(String emp, String atributo, String valor1) throws EmpregadoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, ValorTrueOuFalseException, MetodoPagamentoInvalidoException, ComissaoNaoPodeSerNulaException, ComissaoDeveSerNumericaException, ComissaoDeveSerNaoNegativaException, SalarioDeveSerNaoNegativoException, SalarioNaoPodeSerNuloException, SalarioDeveSerNumericoException, TipoNaoAplicavelException, TipoInvalidoException, EnderecoNaoPodeSerNuloException, NomeNaoPodeSerNuloException, AtributoNaoExisteException, IdEmpregadoNaoPodeSerNuloException {
+        public void alteraEmpregado(String emp, String atributo, String valor1) throws EmpregadoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, ValorTrueOuFalseException, MetodoPagamentoInvalidoException, ComissaoNaoPodeSerNulaException, ComissaoDeveSerNumericaException, ComissaoDeveSerNaoNegativaException, SalarioDeveSerNaoNegativoException, SalarioNaoPodeSerNuloException, SalarioDeveSerNumericoException, TipoNaoAplicavelException, TipoInvalidoException, EnderecoNaoPodeSerNuloException, NomeNaoPodeSerNuloException, AtributoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, IOException {
             ListaEmpregados empregados = readXML();
 
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
@@ -235,7 +252,7 @@ public class BusinessLogic {
             writeToXML(empregados);
         }
 
-        public void alteraEmpregado(String emp, String atributo, boolean valor1, String idSindicato, String taxaSindical) throws EmpregadoNaoExisteException, HaOutroEmpregadoIdMembroException, TaxaSindicalNaoNulaException, TaxaSindicalNaoNegativaException, TaxaSindicalNumericaException, IdSindicatoNaoNuloException {
+        public void alteraEmpregado(String emp, String atributo, boolean valor, String idSindicato, String taxaSindical) throws EmpregadoNaoExisteException, HaOutroEmpregadoIdMembroException, TaxaSindicalNaoNulaException, TaxaSindicalNaoNegativaException, TaxaSindicalNumericaException, IdSindicatoNaoNuloException, IOException {
 
             TratamentoEntrada entrada = new TratamentoEntrada();
             entrada.checkAlteraAtributoSindical(taxaSindical, idSindicato);
@@ -247,16 +264,16 @@ public class BusinessLogic {
             Empregado e = empregados.searchEmpregado(emp);
             empregados.checkMembroId(idSindicato);
 
-            if (valor1)
+            if (valor)
             {
-                e.setSindicalizado(true, idSindicato, taxaSindical);
+                e.mudaSindicalizado(true, idSindicato, taxaSindical);
             }
             empregados.set(emp, e);
 
             writeToXML(empregados);
         }
 
-        public void alteraEmpregado(String emp, String atributo, String valor, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
+        public void alteraEmpregado(String emp, String atributo, String valor, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, IOException {
 
             ListaEmpregados empregados = readXML();
 
@@ -297,7 +314,7 @@ public class BusinessLogic {
 
 
         public void alteraEmpregado(String emp, String atributo, String valor1, String banco, String agencia,
-                                    String contaCorrente) throws EmpregadoNaoExisteException, AgenciaNaoNuloException, ContaCorrenteNaoNuloException, BancoNaoNuloException {
+                                    String contaCorrente) throws EmpregadoNaoExisteException, AgenciaNaoNuloException, ContaCorrenteNaoNuloException, BancoNaoNuloException, IOException {
             ListaEmpregados empregados = readXML();
 
             assert empregados != null;
@@ -314,13 +331,13 @@ public class BusinessLogic {
 
 
 
-        public String getEmpregadoPorNome(String nome, int indice) throws NaoHaEmpregadoComEsseNomeException {
+        public String getEmpregadoPorNome(String nome, int indice) throws NaoHaEmpregadoComEsseNomeException, IOException {
             ListaEmpregados empregados = readXML();
             assert empregados != null;
             return empregados.searchEmpregadoByName(nome, indice);
         }
 
-        public void removerEmpregado (String emp) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException {
+        public void removerEmpregado (String emp) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, IOException {
 
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
             entrada.checkIdEmpregado();
@@ -332,7 +349,7 @@ public class BusinessLogic {
             writeToXML(empregados);
         }
 
-        public void lancaCartao(String emp, String data, String horas) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoHoristaException, HorasDevemSerPositivasException, DataInvalidaException, EmpregadoNaoComissionadoException {
+        public void lancaCartao(String emp, String data, String horas) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoHoristaException, HorasDevemSerPositivasException, DataInvalidaException, EmpregadoNaoComissionadoException, IOException {
 
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
             entrada.checkIdEmpregado();
@@ -353,7 +370,7 @@ public class BusinessLogic {
             writeToXML(empregados);
         }
 
-        public void lancaVenda(String emp, String data, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, DataInvalidaException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, ValorDeveSerPositivoException {
+        public void lancaVenda(String emp, String data, String valor) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, DataInvalidaException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, ValorDeveSerPositivoException, IOException {
 
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
             entrada.checkIdEmpregado();
@@ -375,7 +392,7 @@ public class BusinessLogic {
             writeToXML(empregados);
         }
 
-        public void lancaTaxaServico(String membro, String data, String valor) throws DataInvalidaException, MembroNaoExisteException, IdMembroNaoPodeSerNulaException, ValorDeveSerPositivoException {
+        public void lancaTaxaServico(String membro, String data, String valor) throws DataInvalidaException, MembroNaoExisteException, IdMembroNaoPodeSerNulaException, ValorDeveSerPositivoException, IOException {
 
             TratamentoEntrada entrada = new TratamentoEntrada(membro);
             entrada.checkIdMembro();
@@ -393,7 +410,7 @@ public class BusinessLogic {
             writeToXML(empregados);
         }
 
-        private Empregado initGetServico(String emp, String tipo) throws IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException {
+        private Empregado initGetServico(String emp, String tipo) throws IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, IOException {
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
             entrada.checkIdEmpregado();
 
@@ -408,7 +425,7 @@ public class BusinessLogic {
             return e;
         }
 
-        public String getVendasRealizadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException {
+        public String getVendasRealizadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, IOException {
             String tipo = "comissionado";
 
             Empregado e = initGetServico(emp, tipo);
@@ -416,13 +433,13 @@ public class BusinessLogic {
             double totalVendas = 0;
             if (e.getTipo().equals(tipo))
             {
-                totalVendas = ((EmpregadoComissionado) e).getVendas(dataInicial,
+                totalVendas = ((EmpregadoComissionado) e).getTotalVendas(dataInicial,
                         dataFinal);
             }
 
             return formatDoubleOutput(totalVendas);
         }
-        public String getHorasNormaisTrabalhadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoHoristaException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoComissionadoException {
+        public String getHorasNormaisTrabalhadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoHoristaException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoComissionadoException, IOException {
 
             String tipo = "horista";
 
@@ -436,7 +453,7 @@ public class BusinessLogic {
             return (totalHoras % 1 !=0 && totalHoras!=0? String.format("%,.1f", totalHoras):
                     Integer.toString((int)totalHoras));
         }
-        public String getHorasExtrasTrabalhadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoHoristaException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoComissionadoException {
+        public String getHorasExtrasTrabalhadas(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, EmpregadoNaoHoristaException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoComissionadoException, IOException {
 
             String tipo = "horista";
 
@@ -451,7 +468,7 @@ public class BusinessLogic {
                     Integer.toString((int)totalHoras));
         }
 
-        public String getTaxasServico(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoSindicalizadoException {
+        public String getTaxasServico(String emp, String dataInicial, String dataFinal) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException, EmpregadoNaoSindicalizadoException, IOException {
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
             entrada.checkIdEmpregado();
 
@@ -474,7 +491,7 @@ public class BusinessLogic {
 
 
 
-        public String totalFolha(String data) throws DataInvalidaException, DataInicialPosteriorFinalException {
+        public String totalFolha(String data) throws DataInvalidaException, DataInicialPosteriorFinalException, IOException {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
             LocalDate dataF;
             LocalDate dataInicialComissionado;
@@ -485,7 +502,7 @@ public class BusinessLogic {
             {
                 throw new DataInvalidaException();
             }
-            ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+            ListaEmpregados empregados = readXML();
             double total = 0;
             for (Empregado e: empregados.getList())
             {
@@ -501,7 +518,7 @@ public class BusinessLogic {
                         EmpregadoComissionado ec = (EmpregadoComissionado) e;
                         if (dataF.getDayOfWeek() == DayOfWeek.FRIDAY) {
                             if ((ChronoUnit.DAYS.between(dataInicialComissionado, dataF) + 1) % 14 == 0) {
-                                total += Math.floor(ec.getVendas(dataF.minusDays(13), dataF) * ec.getTaxaDeComissao() * 100) / 100d;
+                                total += Math.floor(ec.getTotalVendas(dataF.minusDays(13), dataF) * ec.getTaxaDeComissao() * 100) / 100d;
                                 total += Math.floor(ec.getSalario() * 24 / 52 * 100) / 100d;
                             }
                         }

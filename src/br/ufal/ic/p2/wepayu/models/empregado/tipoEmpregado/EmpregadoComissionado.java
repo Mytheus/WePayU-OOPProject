@@ -13,7 +13,13 @@ import java.time.LocalDate;
 public class EmpregadoComissionado extends Empregado {
 
 
+
+
     protected double taxaDeComissao;
+
+
+
+
     protected List<ResultadoDeVenda> vendas;
 
     public EmpregadoComissionado(String id,String nome, String endereco, String tipo, String salario,
@@ -24,12 +30,23 @@ public class EmpregadoComissionado extends Empregado {
         vendas = new ArrayList<>();
     }
 
+    public EmpregadoComissionado() {
+    }
+
+    public List<ResultadoDeVenda> getVendas() {
+        return vendas;
+    }
+
     public double getTaxaDeComissao() {
         return taxaDeComissao;
     }
 
     public void setTaxaDeComissao(String taxaDeComissao) {
         this.taxaDeComissao = Double.parseDouble(taxaDeComissao.replace(",", "."));
+    }
+
+    public void setTaxaDeComissao(double taxaDeComissao) {
+        this.taxaDeComissao = taxaDeComissao;
     }
 
     public void addNewVenda(String data, String valor) throws DataInvalidaException {
@@ -47,7 +64,7 @@ public class EmpregadoComissionado extends Empregado {
         }
         return total;
     }
-    public double getVendas(String dataInicial, String dataFinal) throws DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException {
+    public double getTotalVendas(String dataInicial, String dataFinal) throws DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException {
         TratamentoEntrada entrada = new TratamentoEntrada();
 
         LocalDate dataInicialF = entrada.checkData(dataInicial, true);
@@ -56,8 +73,12 @@ public class EmpregadoComissionado extends Empregado {
         return totalVendas(dataInicialF, dataFinalF);
     }
 
-    public double getVendas(LocalDate dataInicialF, LocalDate dataFinalF) throws
+    public double getTotalVendas(LocalDate dataInicialF, LocalDate dataFinalF) throws
             DataInicialPosteriorFinalException {
         return totalVendas(dataInicialF, dataFinalF);
+    }
+
+    public void setVendas(List<ResultadoDeVenda> vendas) {
+        this.vendas = vendas;
     }
 }

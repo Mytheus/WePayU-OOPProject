@@ -12,19 +12,27 @@ import java.util.List;
 public class ListaEmpregados {
 
 
-    public List<Empregado> getList() {
-        return list;
-    }
 
-    private final List<Empregado> list;
+    private List<Empregado> list;
 
     public ListaEmpregados(){
         list = new ArrayList<>();
     }
 
+
+    public List<Empregado> getList() {
+        return list;
+    }
+
+    public void setList(List<Empregado> list) {
+        this.list = list;
+    }
+
     public void add(Empregado e){
         list.add(e);
     }
+
+
 
     public int size()
     {
@@ -69,7 +77,7 @@ public class ListaEmpregados {
         for (int i = 0; i < this.size(); i++)
         {
             if (this.list.get(i).isSindicalizado())
-                if(this.list.get(i).getSindicato().getIdMembro().equals(membro))
+                if(this.list.get(i).getMembroSindicato().getIdMembro().equals(membro))
                     return this.list.get(i);
         }
         throw new MembroNaoExisteException();
@@ -79,7 +87,7 @@ public class ListaEmpregados {
         for (int i = 0; i < this.size(); i++)
         {
             if (this.list.get(i).isSindicalizado())
-                if(this.list.get(i).getSindicato().getIdMembro().equals(membro))
+                if(this.list.get(i).getMembroSindicato().getIdMembro().equals(membro))
                     throw new HaOutroEmpregadoIdMembroException();
         }
     }

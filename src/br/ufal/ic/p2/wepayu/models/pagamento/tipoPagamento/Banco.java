@@ -14,6 +14,9 @@ public class Banco extends MetodoPagamento {
         this.contaCorrente = contaCorrente;
     }
 
+    public Banco() {
+    }
+
     public String getBanco() {
         return banco;
     }

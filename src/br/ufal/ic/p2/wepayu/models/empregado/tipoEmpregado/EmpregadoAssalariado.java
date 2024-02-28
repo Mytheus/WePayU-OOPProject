@@ -10,4 +10,7 @@ public class EmpregadoAssalariado extends Empregado {
     public EmpregadoAssalariado(String id,String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
         super(id, nome, endereco, tipo, salario);
     }
+
+    public EmpregadoAssalariado() {
+    }
 }

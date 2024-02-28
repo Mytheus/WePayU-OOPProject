@@ -9,6 +9,9 @@ import java.time.format.DateTimeParseException;
 public class TaxaServico {
 
     protected LocalDate data;
+
+
+
     protected double valor;
 
     public TaxaServico(String data, String valor) throws DataInvalidaException {
@@ -21,12 +24,23 @@ public class TaxaServico {
         this.valor = Double.parseDouble(valor.replace(",", "."));
     }
 
+    public TaxaServico() {
+    }
+
     public LocalDate getData() {
         return data;
     }
 
     public double getValor() {
         return valor;
+    }
+
+    public void setData(LocalDate data) {
+        this.data = data;
+    }
+
+    public void setValor(double valor) {
+        this.valor = valor;
     }
 
 

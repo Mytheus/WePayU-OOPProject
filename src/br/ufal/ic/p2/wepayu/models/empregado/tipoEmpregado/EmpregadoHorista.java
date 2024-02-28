@@ -11,10 +11,23 @@ import java.util.List;
 
 public class EmpregadoHorista extends Empregado {
 
+
+
     protected List<CartaoDePonto> pontos;
     public EmpregadoHorista(String id, String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
         super(id, nome, endereco, tipo, salario);
         pontos = new ArrayList<>();
+    }
+
+    public EmpregadoHorista() {
+    }
+
+    public List<CartaoDePonto> getPontos() {
+        return pontos;
+    }
+
+    public void setPontos(List<CartaoDePonto> pontos) {
+        this.pontos = pontos;
     }
 
     public void addNewPonto(String data, String horas) throws DataInvalidaException {
@@ -69,9 +82,9 @@ public class EmpregadoHorista extends Empregado {
         int horas = (int)this.getHoras(data.minusDays(7), data, false);
         int extra = (int)(this.getHoras(data.minusDays(7), data, true));
         double salBruto = horas*this.getSalario();
-        double desconto = (this.isSindicalizado()?this.getSindicato().getTaxaSindical() * 7: 0);
+        double desconto = (this.isSindicalizado()?this.getMembroSindicato().getTaxaSindical() * 7: 0);
         double salLiq = salBruto - desconto;
-        String metodo = this.getMetodoPagamento();
+        String metodo = this.getMetodoPagamentoName();
         String res = String.format("%-39s %-6d %-8d %,-10.2f %,.2f %,.2f %s\n", nome, horas, extra, salBruto, desconto,
                 salLiq,
                 metodo);

@@ -6,6 +6,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 public class CartaoDePonto {
+
+
     protected LocalDate data;
     protected Double horas;
     public CartaoDePonto(String data, String horas) throws DataInvalidaException {
@@ -19,11 +21,22 @@ public class CartaoDePonto {
         this.horas = Double.parseDouble(horas.replace(",", "."));
     }
 
+    public CartaoDePonto() {
+    }
+
     public LocalDate getData() {
         return data;
     }
 
     public Double getHoras() {
         return horas;
+    }
+
+    public void setData(LocalDate data) {
+        this.data = data;
+    }
+
+    public void setHoras(Double horas) {
+        this.horas = horas;
     }
 }

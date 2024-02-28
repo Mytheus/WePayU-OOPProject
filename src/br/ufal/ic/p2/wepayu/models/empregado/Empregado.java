@@ -16,8 +16,15 @@ public class Empregado {
     protected String tipo;
     protected double salario;
 
+
+
     protected boolean sindicalizado;
+
+
+
     protected MembroSindicato membroSindicato;
+
+
 
 
     protected MetodoPagamento metodoPagamento;
@@ -34,6 +41,9 @@ public class Empregado {
         this.salario = Double.parseDouble(salario.replace(",", "."));
         this.metodoPagamento = new EmMaos();
         this.sindicalizado = false;
+    }
+
+    public Empregado() {
     }
 
     public String getId() {
@@ -56,6 +66,26 @@ public class Empregado {
         return salario;
     }
 
+    public MembroSindicato getMembroSindicato() {
+        return membroSindicato;
+    }
+
+    public boolean isSindicalizado() {
+        return sindicalizado;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public MetodoPagamento getMetodoPagamento() {
+        return metodoPagamento;
+    }
+    public String getMetodoPagamentoName() {
+        return this.metodoPagamento.getMetodoPagamento();
+    }
+    public MetodoPagamento getObjMetodoPagamento() { return this.metodoPagamento;}
+
     public void setNome(String nome) {
         this.nome = nome;
     }
@@ -75,36 +105,26 @@ public class Empregado {
         this.salario = Double.parseDouble(salario.replace(",", "."));
     }
 
-    public boolean isSindicalizado() {
-        return sindicalizado;
-    }
+
 
     public void setSindicalizado(String sindicalizado) {
         this.sindicalizado = Boolean.parseBoolean(sindicalizado);
     }
-    public void setSindicalizado(Boolean sindicalizado) {
+    public void setSindicalizado(boolean sindicalizado) {
         this.sindicalizado = sindicalizado;
     }
-    public void setSindicalizado(boolean sindicalizado, String idSindicato, String taxaSindical) {
-        this.sindicalizado = sindicalizado;
-        membroSindicato = new MembroSindicato(idSindicato, taxaSindical);
+    public void mudaSindicalizado(boolean sindicalizado, String idSindicato, String taxaSindical) {
+        this.setSindicalizado(sindicalizado);
+        this.setMembroSindicato(new MembroSindicato(idSindicato, taxaSindical));
     }
-    public void setSindicalizado(String sindicalizado, String idSindicato, String taxaSindical) {
+    public void mudaSindicalizado(String sindicalizado, String idSindicato, String taxaSindical) {
         this.sindicalizado = Boolean.parseBoolean(sindicalizado);
         membroSindicato = new MembroSindicato(idSindicato, taxaSindical);
     }
-    public MembroSindicato getSindicato() {
-        return membroSindicato;
-    }
 
-    public void addNewTaxaServico(String data, String valor) throws DataInvalidaException {
-        membroSindicato.addNewTaxa(data, valor);
+    public void setMembroSindicato(MembroSindicato membroSindicato) {
+        this.membroSindicato = membroSindicato;
     }
-
-    public String getMetodoPagamento() {
-        return this.metodoPagamento.getMetodoPagamento();
-    }
-    public MetodoPagamento getObjMetodoPagamento() { return this.metodoPagamento;}
 
     public void setMetodoPagamento(String banco, String agencia, String contaCorrente)
     {
@@ -121,6 +141,19 @@ public class Empregado {
             metodoPagamento = new Correios();
         }
     }
+
+
+    public void setMetodoPagamento(MetodoPagamento metodoPagamento) {
+        this.metodoPagamento = metodoPagamento;
+    }
+
+
+    public void addNewTaxaServico(String data, String valor) throws DataInvalidaException {
+        membroSindicato.addNewTaxa(data, valor);
+    }
+
+
+
 
     public double getTaxasServico(String dataInicial, String dataFinal) throws DataInicialInvalidaException, DataFinalInvalidaException, DataInicialPosteriorFinalException {
         return membroSindicato.getTaxasServico(dataInicial, dataFinal);

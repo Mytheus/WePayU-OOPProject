@@ -12,6 +12,8 @@ import java.util.List;
 
 public class MembroSindicato {
 
+
+
     protected String idMembro;
     protected double taxaSindical;
 
@@ -22,6 +24,9 @@ public class MembroSindicato {
         this.idMembro = idMembro;
         this.taxaSindical = Double.parseDouble(taxaSindical.replace(",", "."));
         taxas = new ArrayList<>();
+    }
+
+    public MembroSindicato() {
     }
 
     public String getIdMembro() {
@@ -56,5 +61,17 @@ public class MembroSindicato {
         }
         return total;
 
+    }
+
+    public void setIdMembro(String idMembro) {
+        this.idMembro = idMembro;
+    }
+
+    public void setTaxaSindical(double taxaSindical) {
+        this.taxaSindical = taxaSindical;
+    }
+
+    public void setTaxas(List<TaxaServico> taxas) {
+        this.taxas = taxas;
     }
 }
