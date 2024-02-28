@@ -19,6 +19,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 
+
 public class BusinessLogic {
 
     private final static String FILEPATH = "XMLFiles\\empregados.xml";
@@ -85,8 +86,14 @@ public class BusinessLogic {
         private void writeToXML(ListaEmpregados empregados) throws IOException {
             FileOutputStream fos = new FileOutputStream(FILEPATH);
             XMLEncoder encoder = new XMLEncoder(fos);
+            /*
             encoder.setPersistenceDelegate(LocalDate.class,
                     new PersistenceDelegate() {
+
+                        @Override
+                        protected boolean mutatesTo(Object oldInstance, Object newInstance) {
+                            return oldInstance.equals(newInstance);
+                        }
                         @Override
                         protected Expression instantiate(Object localDate, Encoder encdr) {
                             return new Expression(localDate,
@@ -95,6 +102,7 @@ public class BusinessLogic {
                                     new Object[]{localDate.toString()});
                         }
                     });
+            */
             encoder.writeObject(empregados);
             encoder.close();
             fos.close();
@@ -173,7 +181,7 @@ public class BusinessLogic {
                 case "endereco" -> e.getEndereco();
                 case "tipo" -> e.getTipo();
                 case "salario" -> formatDoubleOutput(e.getSalario());
-                case "sindicalizado" -> Boolean.toString(e.isSindicalizado());
+                case "sindicalizado" -> e.getSindicalizado();
                 case "metodoPagamento" -> e.getMetodoPagamentoName();
                 case "comissao" -> {
                     if (!e.getTipo().equals("comissionado")) throw new EmpregadoNaoComissionadoException();
@@ -184,7 +192,7 @@ public class BusinessLogic {
                     yield ((Banco) e.getObjMetodoPagamento()).getBanco();
                 }
                 case "idSindicato" -> {
-                    if (!e.isSindicalizado()) throw new EmpregadoNaoSindicalizadoException();
+                    if (!Boolean.parseBoolean(e.getSindicalizado())) throw new EmpregadoNaoSindicalizadoException();
                     yield e.getMembroSindicato().getIdMembro();
                 }
                 case "agencia" -> {
@@ -196,7 +204,7 @@ public class BusinessLogic {
                     yield ((Banco) e.getObjMetodoPagamento()).getContaCorrente();
                 }
                 case "taxaSindical" -> {
-                    if (!e.isSindicalizado()) throw new EmpregadoNaoSindicalizadoException();
+                    if (!Boolean.parseBoolean(e.getSindicalizado())) throw new EmpregadoNaoSindicalizadoException();
                     yield formatDoubleOutput(e.getMembroSindicato().getTaxaSindical());
                 }
                 default -> "";
@@ -266,7 +274,7 @@ public class BusinessLogic {
 
             if (valor)
             {
-                e.mudaSindicalizado(true, idSindicato, taxaSindical);
+                e.mudaSindicalizado("true", idSindicato, taxaSindical);
             }
             empregados.set(emp, e);
 
@@ -402,7 +410,7 @@ public class BusinessLogic {
             assert empregados != null;
             Empregado e = empregados.searchEmpregadoMembro(membro);
 
-            if (e.isSindicalizado())
+            if (Boolean.parseBoolean(e.getSindicalizado()))
             {
                 e.addNewTaxaServico(data, valor);
                 empregados.set(e.getId(), e);
@@ -478,7 +486,7 @@ public class BusinessLogic {
             assert empregados != null;
             Empregado e = empregados.searchEmpregado(emp);
 
-            if (e.isSindicalizado())
+            if (Boolean.parseBoolean(e.getSindicalizado()))
                 totalTaxas = e.getTaxasServico(dataInicial, dataFinal);
             else {
                 throw new EmpregadoNaoSindicalizadoException();

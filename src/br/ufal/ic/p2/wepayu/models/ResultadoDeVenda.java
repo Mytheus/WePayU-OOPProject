@@ -8,13 +8,13 @@ import java.time.format.DateTimeParseException;
 public class ResultadoDeVenda {
 
 
-    protected LocalDate data;
+    protected String data;
     protected double valor;
 
     public ResultadoDeVenda(String data, String valor) throws DataInvalidaException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
         try{
-        this.data = LocalDate.parse(data, formatter);}
+        this.data = LocalDate.parse(data, formatter).toString();}
         catch (DateTimeParseException e)
         {
             throw new DataInvalidaException();
@@ -25,7 +25,7 @@ public class ResultadoDeVenda {
     public ResultadoDeVenda() {
     }
 
-    public LocalDate getData() {
+    public String getData() {
         return data;
     }
 
@@ -33,7 +33,7 @@ public class ResultadoDeVenda {
         return valor;
     }
 
-    public void setData(LocalDate data) {
+    public void setData(String data) {
         this.data = data;
     }
 

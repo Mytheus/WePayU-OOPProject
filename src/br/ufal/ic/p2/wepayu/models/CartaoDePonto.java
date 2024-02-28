@@ -8,12 +8,12 @@ import java.time.format.DateTimeParseException;
 public class CartaoDePonto {
 
 
-    protected LocalDate data;
+    protected String data;
     protected Double horas;
     public CartaoDePonto(String data, String horas) throws DataInvalidaException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
         try {
-            this.data = LocalDate.parse(data, formatter);
+            this.data = LocalDate.parse(data, formatter).toString();
         }catch (DateTimeParseException e)
         {
             throw new DataInvalidaException();
@@ -24,7 +24,7 @@ public class CartaoDePonto {
     public CartaoDePonto() {
     }
 
-    public LocalDate getData() {
+    public String getData() {
         return data;
     }
 
@@ -32,7 +32,7 @@ public class CartaoDePonto {
         return horas;
     }
 
-    public void setData(LocalDate data) {
+    public void setData(String data) {
         this.data = data;
     }
 

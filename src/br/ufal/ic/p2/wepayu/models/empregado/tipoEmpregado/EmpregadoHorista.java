@@ -6,6 +6,7 @@ import br.ufal.ic.p2.wepayu.models.CartaoDePonto;
 import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,8 +37,10 @@ public class EmpregadoHorista extends Empregado {
 
     private double totalHoras(boolean extras, LocalDate dataInicialF, LocalDate dataFinalF) {
         double total = 0;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-M-d");
         for (CartaoDePonto ponto : pontos) {
-            LocalDate dataHoras = ponto.getData();
+
+            LocalDate dataHoras = LocalDate.parse(ponto.getData(), formatter);
             double horas = ponto.getHoras();
 
 
@@ -82,7 +85,8 @@ public class EmpregadoHorista extends Empregado {
         int horas = (int)this.getHoras(data.minusDays(7), data, false);
         int extra = (int)(this.getHoras(data.minusDays(7), data, true));
         double salBruto = horas*this.getSalario();
-        double desconto = (this.isSindicalizado()?this.getMembroSindicato().getTaxaSindical() * 7: 0);
+        double desconto = (Boolean.parseBoolean(this.getSindicalizado())?
+                this.getMembroSindicato().getTaxaSindical() * 7: 0);
         double salLiq = salBruto - desconto;
         String metodo = this.getMetodoPagamentoName();
         String res = String.format("%-39s %-6d %-8d %,-10.2f %,.2f %,.2f %s\n", nome, horas, extra, salBruto, desconto,

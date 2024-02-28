@@ -76,7 +76,7 @@ public class ListaEmpregados {
     public Empregado searchEmpregadoMembro(String membro) throws MembroNaoExisteException {
         for (int i = 0; i < this.size(); i++)
         {
-            if (this.list.get(i).isSindicalizado())
+            if (Boolean.parseBoolean(this.list.get(i).getSindicalizado()))
                 if(this.list.get(i).getMembroSindicato().getIdMembro().equals(membro))
                     return this.list.get(i);
         }
@@ -86,7 +86,7 @@ public class ListaEmpregados {
     public void checkMembroId(String membro) throws HaOutroEmpregadoIdMembroException {
         for (int i = 0; i < this.size(); i++)
         {
-            if (this.list.get(i).isSindicalizado())
+            if (Boolean.parseBoolean(this.list.get(i).getSindicalizado()))
                 if(this.list.get(i).getMembroSindicato().getIdMembro().equals(membro))
                     throw new HaOutroEmpregadoIdMembroException();
         }

@@ -18,7 +18,7 @@ public class Empregado {
 
 
 
-    protected boolean sindicalizado;
+    protected String sindicalizado;
 
 
 
@@ -40,7 +40,7 @@ public class Empregado {
         this.tipo = tipo;
         this.salario = Double.parseDouble(salario.replace(",", "."));
         this.metodoPagamento = new EmMaos();
-        this.sindicalizado = false;
+        this.sindicalizado = "false";
     }
 
     public Empregado() {
@@ -70,7 +70,7 @@ public class Empregado {
         return membroSindicato;
     }
 
-    public boolean isSindicalizado() {
+    public String getSindicalizado() {
         return sindicalizado;
     }
 
@@ -106,20 +106,12 @@ public class Empregado {
     }
 
 
-
     public void setSindicalizado(String sindicalizado) {
-        this.sindicalizado = Boolean.parseBoolean(sindicalizado);
-    }
-    public void setSindicalizado(boolean sindicalizado) {
         this.sindicalizado = sindicalizado;
     }
-    public void mudaSindicalizado(boolean sindicalizado, String idSindicato, String taxaSindical) {
+    public void mudaSindicalizado(String sindicalizado, String idSindicato, String taxaSindical) {
         this.setSindicalizado(sindicalizado);
         this.setMembroSindicato(new MembroSindicato(idSindicato, taxaSindical));
-    }
-    public void mudaSindicalizado(String sindicalizado, String idSindicato, String taxaSindical) {
-        this.sindicalizado = Boolean.parseBoolean(sindicalizado);
-        membroSindicato = new MembroSindicato(idSindicato, taxaSindical);
     }
 
     public void setMembroSindicato(MembroSindicato membroSindicato) {

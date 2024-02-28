@@ -8,7 +8,7 @@ import java.time.format.DateTimeParseException;
 
 public class TaxaServico {
 
-    protected LocalDate data;
+    protected String data;
 
 
 
@@ -16,7 +16,7 @@ public class TaxaServico {
 
     public TaxaServico(String data, String valor) throws DataInvalidaException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
-        try {this.data = LocalDate.parse(data, formatter);}
+        try {this.data = LocalDate.parse(data, formatter).toString();}
         catch (DateTimeParseException e)
         {
             throw new DataInvalidaException();
@@ -27,7 +27,7 @@ public class TaxaServico {
     public TaxaServico() {
     }
 
-    public LocalDate getData() {
+    public String getData() {
         return data;
     }
 
@@ -35,7 +35,7 @@ public class TaxaServico {
         return valor;
     }
 
-    public void setData(LocalDate data) {
+    public void setData(String data) {
         this.data = data;
     }
 

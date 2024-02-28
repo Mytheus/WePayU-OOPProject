@@ -5,6 +5,7 @@ import br.ufal.ic.p2.wepayu.utils.TratamentoEntrada;
 import br.ufal.ic.p2.wepayu.models.ResultadoDeVenda;
 import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,8 +58,9 @@ public class EmpregadoComissionado extends Empregado {
     private double totalVendas(LocalDate dataInicialF, LocalDate dataFinalF) throws DataInicialPosteriorFinalException {
         if (dataInicialF.isAfter(dataFinalF)) throw new DataInicialPosteriorFinalException();
         double total = 0;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-M-d");
         for (ResultadoDeVenda venda : vendas) {
-            LocalDate dataVenda = venda.getData();
+            LocalDate dataVenda = LocalDate.parse(venda.getData(), formatter);
             if (dataVenda.isAfter(dataInicialF.minusDays(1)) && dataVenda.isBefore(dataFinalF))
                 total += venda.getValor();
         }

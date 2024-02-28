@@ -7,6 +7,7 @@ import br.ufal.ic.p2.wepayu.Exception.DataInvalidaException;
 import br.ufal.ic.p2.wepayu.utils.TratamentoEntrada;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,8 +55,9 @@ public class MembroSindicato {
         if (dataInicialF.isAfter(dataFinalF)) throw new DataInicialPosteriorFinalException();
 
         double total = 0;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-M-d");
         for (TaxaServico taxa : taxas) {
-            LocalDate dataTaxa = taxa.getData();
+            LocalDate dataTaxa = LocalDate.parse(taxa.getData(), formatter);
             if (dataTaxa.isAfter(dataInicialF.minusDays(1)) && dataTaxa.isBefore(dataFinalF))
                 total += taxa.getValor();
         }
