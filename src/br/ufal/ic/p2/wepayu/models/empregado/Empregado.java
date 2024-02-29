@@ -7,7 +7,7 @@ import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.Correios;
 import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.EmMaos;
 import br.ufal.ic.p2.wepayu.models.sindicato.MembroSindicato;
 
-public class Empregado {
+public class Empregado implements Comparable<Empregado> {
 
 
     protected String id;
@@ -152,4 +152,8 @@ public class Empregado {
     }
 
 
+    @Override
+    public int compareTo(Empregado o) {
+        return this.nome.compareTo(o.nome);
+    }
 }

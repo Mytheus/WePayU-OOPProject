@@ -18,6 +18,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 
 public class BusinessLogic {
@@ -182,13 +185,13 @@ public class BusinessLogic {
                 case "tipo" -> e.getTipo();
                 case "salario" -> formatDoubleOutput(e.getSalario());
                 case "sindicalizado" -> e.getSindicalizado();
-                case "metodoPagamento" -> e.getMetodoPagamentoName();
+                case "metodoPagamento" -> e.getMetodoPagamento().toString();
                 case "comissao" -> {
                     if (!e.getTipo().equals("comissionado")) throw new EmpregadoNaoComissionadoException();
                     yield formatDoubleOutput(((EmpregadoComissionado) e).getTaxaDeComissao());
                 }
                 case "banco" -> {
-                    if (!e.getMetodoPagamentoName().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
+                    if (!e.getMetodoPagamento().toString().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
                     yield ((Banco) e.getObjMetodoPagamento()).getBanco();
                 }
                 case "idSindicato" -> {
@@ -196,11 +199,11 @@ public class BusinessLogic {
                     yield e.getMembroSindicato().getIdMembro();
                 }
                 case "agencia" -> {
-                    if (!e.getMetodoPagamentoName().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
+                    if (!e.getMetodoPagamento().toString().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
                     yield ((Banco) e.getObjMetodoPagamento()).getAgencia();
                 }
                 case "contaCorrente" -> {
-                    if (!e.getMetodoPagamentoName().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
+                    if (!e.getMetodoPagamento().toString().equals("banco")) throw new EmpregadoNaoRecebeBancoException();
                     yield ((Banco) e.getObjMetodoPagamento()).getContaCorrente();
                 }
                 case "taxaSindical" -> {
@@ -542,8 +545,10 @@ public class BusinessLogic {
             return String.format("%,.2f",total).replace(".", "");
         }
 
-        public void rodaFolha(String data, String saida) {
-            /*ListaEmpregados empregados = (ListaEmpregados) xstream.fromXML(persistence.readXMLFile());
+        public void rodaFolha(String data, String saida) throws IOException, DataInvalidaException, DataInicialPosteriorFinalException, DataInicialInvalidaException, DataFinalInvalidaException {
+            ListaEmpregados empregados = readXML();
+            List<Empregado> lista = empregados.getList();
+            Collections.sort(lista);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
             LocalDate dataF;
             LocalDate dataInicialComissionado;
@@ -555,18 +560,78 @@ public class BusinessLogic {
                 throw new DataInvalidaException();
             }
             Persistence persistence = new Persistence(saida);
-            persistence.createFile();
-            persistence.appendToFile(String.format("FOLHA DE PAGAMENTO DO DIA %s", dataF) + "\n" +
-                    "====================================" + "\n\n");
-            persistence.readWriteToFile("folhaPagamentoCabecalhos\\horista.txt");
-            for (Empregado e: empregados.getList())
+            persistence.writeToFile(String.format("FOLHA DE PAGAMENTO DO DIA %s", dataF));
+            persistence.copyFrom("placeholders\\horista.txt");
+            int totalHoras = 0, totalExtra = 0;
+            double totalSalB = 0, totalDesc = 0, totalSalLiq = 0;
+            if (!(dataF.with(TemporalAdjusters.lastDayOfMonth()).getDayOfMonth() == dataF.getDayOfMonth()))
             {
-                if (e.getTipo().equals("horista"))
+                for (Empregado e: lista)
                 {
-                    String info = ((EmpregadoHorista) e).getInfo(dataF);
-                    persistence.appendToFile(info);
+                    if (e.getTipo().equals("horista"))
+                    {
+                        InfoFolha infoH = ((EmpregadoHorista) e).getInfo(dataF);
+                        totalHoras+=infoH.getHoras();
+                        totalExtra+=infoH.getExtras();
+                        totalSalB+=infoH.getSalBruto();
+                        totalDesc+=infoH.getDesconto();
+                        totalSalLiq+=infoH.getSalLiq();
+                        persistence.writeToFile(infoH.getRealatorio(1));
+                    }
                 }
             }
+
+            persistence.writeToFile(String.format("\nTOTAL HORISTAS %27d %5d %13.2f %9.2f %15.2f\n"
+                    , totalHoras, totalExtra, totalSalB, totalDesc, totalSalLiq));
+
+            persistence.copyFrom("placeholders\\assalariado.txt");
+            totalSalB = 0; totalDesc = 0; totalSalLiq = 0;
+            if (dataF.with(TemporalAdjusters.lastDayOfMonth()).getDayOfMonth() == dataF.getDayOfMonth()) {
+                for (Empregado e: lista)
+                {
+                    if (e.getTipo().equals("assalariado"))
+                    {
+                        InfoFolha infoA = ((EmpregadoAssalariado) e).getInfo(dataF);
+                        totalSalB+=infoA.getSalBruto();
+                        totalDesc+=infoA.getDesconto();
+                        totalSalLiq+=infoA.getSalLiq();
+                        persistence.writeToFile(infoA.getRealatorio(2));
+                    }
+                }
+            }
+
+            persistence.writeToFile(String.format("\nTOTAL ASSALARIADOS %43.2f %9.2f %15.2f\n"
+                    , totalSalB, totalDesc, totalSalLiq));
+
+            persistence.copyFrom("placeholders\\comissionado.txt");
+            double totalFixo = 0, totalVendas = 0, totalComissao = 0;
+            totalSalB = 0; totalDesc = 0; totalSalLiq = 0;
+
+            if (dataF.getDayOfWeek() == DayOfWeek.FRIDAY) {
+                if ((ChronoUnit.DAYS.between(dataInicialComissionado, dataF) + 1) % 14 == 0) {
+                    for (Empregado e: lista)
+                    {
+                        if (e.getTipo().equals("comissionado"))
+                        {
+                            InfoFolha infoC = ((EmpregadoComissionado) e).getInfo(dataF);
+                            totalSalB+=infoC.getSalBruto();
+                            totalDesc+=infoC.getDesconto();
+                            totalSalLiq+=infoC.getSalLiq();
+                            totalFixo+=infoC.getFixo();
+                            totalVendas+=infoC.getVendas();
+                            totalComissao+=infoC.getComissao();
+                            persistence.writeToFile(infoC.getRealatorio(3));
+                        }
+                    }
+                }
+            }
+
+            persistence.writeToFile(String.format("\nTOTAL COMISSIONADOS %10.2f %8.2f %8.2f %13.2f %9.2f %15.2f\n"
+                    , totalFixo, totalVendas, totalComissao, totalSalB, totalDesc, totalSalLiq));
+            double total = Double.parseDouble(this.totalFolha(data).replace(",", "."));
+            persistence.writeToFile(String.format("TOTAL FOLHA: %-2.2f", total));
+
+            /*
             persistence.readWriteToFile("folhaPagamentoCabecalhos\\assalariado.txt");
             persistence.readWriteToFile("folhaPagamentoCabecalhos\\comissionado.txt");
             persistence.appendToFile(String.format("TOTAL FOLHA: %s", totalFolha(data)));*/

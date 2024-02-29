@@ -53,7 +53,6 @@ public class MembroSindicato {
         LocalDate dataInicialF = entrada.checkData(dataInicial, true);
         LocalDate dataFinalF = entrada.checkData(dataFinal, false);
         if (dataInicialF.isAfter(dataFinalF)) throw new DataInicialPosteriorFinalException();
-
         double total = 0;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-M-d");
         for (TaxaServico taxa : taxas) {

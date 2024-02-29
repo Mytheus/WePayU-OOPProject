@@ -1,6 +1,7 @@
 package br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
+import br.ufal.ic.p2.wepayu.utils.InfoFolha;
 import br.ufal.ic.p2.wepayu.utils.TratamentoEntrada;
 import br.ufal.ic.p2.wepayu.models.ResultadoDeVenda;
 import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
@@ -82,5 +83,39 @@ public class EmpregadoComissionado extends Empregado {
 
     public void setVendas(List<ResultadoDeVenda> vendas) {
         this.vendas = vendas;
+    }
+
+    public InfoFolha getInfo(LocalDate data) throws DataInicialPosteriorFinalException, DataInicialInvalidaException,
+            DataFinalInvalidaException {
+        LocalDate dataInicial = data.minusDays(13);
+
+
+        double fixo = Math.floor(this.getSalario() * 24 / 52 * 100) / 100d;
+        double vendas = Math.floor(this.getTotalVendas(dataInicial, data) * 100) / 100d;
+        double comissao = Math.floor(vendas * this.getTaxaDeComissao() * 100) / 100d;
+
+        double salBruto =
+                comissao + fixo;
+
+
+        double desconto = 0;
+        if(Boolean.parseBoolean(this.getSindicalizado()))
+        {
+            double taxasAdc = this.getMembroSindicato().getTaxasServico(dataInicial.toString(),
+                    data.toString());
+            desconto = this.getMembroSindicato().getTaxaSindical() * 14;
+            desconto = desconto + taxasAdc;
+        }
+        double salLiq = 0;
+        if(salBruto-desconto>=0)
+        {
+            salLiq = salBruto-desconto;
+        }
+        else {
+            desconto = 0;
+        }
+
+        String metodo = this.getMetodoPagamentoName() + ", " + this.endereco;
+        return new InfoFolha(this.nome, salBruto, desconto, salLiq, metodo, fixo, vendas, comissao);
     }
 }

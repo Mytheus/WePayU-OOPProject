@@ -1,6 +1,7 @@
 package br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
+import br.ufal.ic.p2.wepayu.utils.InfoFolha;
 import br.ufal.ic.p2.wepayu.utils.TratamentoEntrada;
 import br.ufal.ic.p2.wepayu.models.CartaoDePonto;
 import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
@@ -80,19 +81,34 @@ public class EmpregadoHorista extends Empregado {
         return totalHoras(extras, dataInicialF, dataFinalF);
     }
 
-    public String getInfo(LocalDate data) throws DataInicialPosteriorFinalException {
-        String nome = this.nome;
-        int horas = (int)this.getHoras(data.minusDays(7), data, false);
-        int extra = (int)(this.getHoras(data.minusDays(7), data, true));
-        double salBruto = horas*this.getSalario();
-        double desconto = (Boolean.parseBoolean(this.getSindicalizado())?
-                this.getMembroSindicato().getTaxaSindical() * 7: 0);
-        double salLiq = salBruto - desconto;
+    public InfoFolha getInfo(LocalDate data) throws DataInicialPosteriorFinalException, DataInicialInvalidaException,
+            DataFinalInvalidaException {
+        LocalDate dataInicial = data.minusDays(7);
+
+        int horas = (int)this.getHoras(dataInicial, data, false);
+        int extra = (int)(this.getHoras(dataInicial, data, true));
+
+        double salBruto = horas*this.getSalario() + extra*this.getSalario()*1.5;
+
+        double desconto = 0;
+        if(Boolean.parseBoolean(this.getSindicalizado()))
+        {
+            double taxasAdc = this.getMembroSindicato().getTaxasServico(dataInicial.toString(),
+                            data.toString());
+            desconto = this.getMembroSindicato().getTaxaSindical() * 7;
+            desconto = desconto + taxasAdc;
+        }
+        double salLiq = 0;
+        if(salBruto-desconto>=0)
+        {
+            salLiq = salBruto-desconto;
+        }
+        else {
+            desconto = 0;
+        }
+
         String metodo = this.getMetodoPagamentoName();
-        String res = String.format("%-39s %-6d %-8d %,-10.2f %,.2f %,.2f %s\n", nome, horas, extra, salBruto, desconto,
-                salLiq,
-                metodo);
-        return res;
+        return new InfoFolha(this.nome, horas, extra, salBruto, desconto, salLiq, metodo);
     }
 
 }

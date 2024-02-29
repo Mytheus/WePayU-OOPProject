@@ -208,28 +208,56 @@ public class TratamentoEntrada {
     }
 
     public LocalDate checkData(String data, boolean inicial) throws DataInicialInvalidaException, DataFinalInvalidaException {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
-
-        String[] a = data.split("/");
-        if (Integer.parseInt(a[0])>=30 && a[1].equals("2")) {
-            if (inicial) throw new DataInicialInvalidaException();
-            else throw new DataFinalInvalidaException();
+        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy-M-d");
+        DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("d/M/yyyy");
+        if(data.contains("-"))
+        {
+            String[] a = data.split("-");
+            if (Integer.parseInt(a[2])>=30 && a[1].equals("2")) {
+                if (inicial) throw new DataInicialInvalidaException();
+                else throw new DataFinalInvalidaException();
+            }
+        }
+        else
+        {
+            String[] a = data.split("/");
+            if (Integer.parseInt(a[0])>=30 && a[1].equals("2")) {
+                if (inicial) throw new DataInicialInvalidaException();
+                else throw new DataFinalInvalidaException();
+            }
         }
 
 
         LocalDate dataF;
-        if (inicial) {
-            try {
-                dataF = LocalDate.parse(data, formatter);
-            } catch (DateTimeParseException e) {
-                throw new DataInicialInvalidaException();
+        if (data.contains("-")) {
+            if (inicial) {
+                try {
+                    dataF = LocalDate.parse(data, formatter1);
+                } catch (DateTimeParseException e) {
+                    throw new DataInicialInvalidaException();
+                }
+            } else {
+                try {
+                    dataF = LocalDate.parse(data, formatter1);
+                } catch (DateTimeParseException e) {
+                    throw new DataFinalInvalidaException();
+                }
             }
         }
-        else {
-            try {
-                dataF = LocalDate.parse(data, formatter);
-            } catch (DateTimeParseException e) {
-                throw new DataFinalInvalidaException();
+        else
+        {
+            if (inicial) {
+                try {
+                    dataF = LocalDate.parse(data, formatter2);
+                } catch (DateTimeParseException e) {
+                    throw new DataInicialInvalidaException();
+                }
+            } else {
+                try {
+                    dataF = LocalDate.parse(data, formatter2);
+                } catch (DateTimeParseException e) {
+                    throw new DataFinalInvalidaException();
+                }
             }
         }
         return dataF;
