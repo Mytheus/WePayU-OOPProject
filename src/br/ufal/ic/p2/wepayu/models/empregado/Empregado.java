@@ -19,6 +19,9 @@ public class Empregado implements Comparable<Empregado> {
 
 
 
+    protected String agendaPagamento;
+
+
     protected String sindicalizado;
 
 
@@ -47,6 +50,14 @@ public class Empregado implements Comparable<Empregado> {
     public Empregado() {
     }
 
+
+    public String getAgendaPagamento() {
+        return agendaPagamento;
+    }
+
+    public void setAgendaPagamento(String agendaPagamento) {
+        this.agendaPagamento = agendaPagamento;
+    }
     public static int getCountId() {
         return countId;
     }

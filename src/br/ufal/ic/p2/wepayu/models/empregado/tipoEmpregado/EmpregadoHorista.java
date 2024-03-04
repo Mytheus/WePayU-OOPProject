@@ -23,6 +23,7 @@ public class EmpregadoHorista extends Empregado {
         super(nome, endereco, tipo, salario);
         pontos = new ArrayList<>();
         this.dataUltimoPagamento = null;
+        this.agendaPagamento = "semanal 5";
     }
 
     public EmpregadoHorista() {

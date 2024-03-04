@@ -215,7 +215,7 @@ public class BusinessLogic {
             return e.getId();
         }
 
-        public String getAtributoEmpregado(String emp, String atributo) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, AtributoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, EmpregadoNaoRecebeBancoException, EmpregadoNaoSindicalizadoException, IOException {
+        public String getAtributoEmpregado(String emp, String atributo) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, AtributoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, EmpregadoNaoRecebeBancoException, EmpregadoNaoSindicalizadoException, IOException, AgendaPagamentoNaoDisponivelException {
             //Acessa lista de empregados
             ListaEmpregados list = readXML();
             if (list == null) list = new ListaEmpregados();
@@ -259,11 +259,12 @@ public class BusinessLogic {
                     if (!Boolean.parseBoolean(e.getSindicalizado())) throw new EmpregadoNaoSindicalizadoException();
                     yield formatDoubleOutput(e.getMembroSindicato().getTaxaSindical());
                 }
+                case "agendaPagamento" -> e.getAgendaPagamento();
                 default -> "";
             };
         }
 
-        public void alteraEmpregado(String emp, String atributo, String valor1) throws EmpregadoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, ValorTrueOuFalseException, MetodoPagamentoInvalidoException, ComissaoNaoPodeSerNulaException, ComissaoDeveSerNumericaException, ComissaoDeveSerNaoNegativaException, SalarioDeveSerNaoNegativoException, SalarioNaoPodeSerNuloException, SalarioDeveSerNumericoException, TipoNaoAplicavelException, TipoInvalidoException, EnderecoNaoPodeSerNuloException, NomeNaoPodeSerNuloException, AtributoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, IOException {
+        public void alteraEmpregado(String emp, String atributo, String valor1) throws EmpregadoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, ValorTrueOuFalseException, MetodoPagamentoInvalidoException, ComissaoNaoPodeSerNulaException, ComissaoDeveSerNumericaException, ComissaoDeveSerNaoNegativaException, SalarioDeveSerNaoNegativoException, SalarioNaoPodeSerNuloException, SalarioDeveSerNumericoException, TipoNaoAplicavelException, TipoInvalidoException, EnderecoNaoPodeSerNuloException, NomeNaoPodeSerNuloException, AtributoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, IOException, AgendaPagamentoNaoDisponivelException {
             ListaEmpregados empregados = readXML();
 
             TratamentoEntrada entrada = new TratamentoEntrada(emp);
@@ -273,7 +274,6 @@ public class BusinessLogic {
             Empregado e = empregados.searchEmpregado(emp);
 
             entrada = new TratamentoEntrada(emp, e.getTipo());
-
             switch (atributo)
             {
                 case "nome":
@@ -304,6 +304,10 @@ public class BusinessLogic {
                 case "sindicalizado":
                     if (valor1.equals("true") || valor1.equals("false")) e.setSindicalizado(valor1);
                     else throw new ValorTrueOuFalseException();
+                    break;
+                case "agendaPagamento":
+                    entrada.checkAgendaPagamento(valor1);
+                    e.setAgendaPagamento(valor1);
                     break;
                 default:
                     throw new AtributoNaoExisteException();
@@ -557,44 +561,12 @@ public class BusinessLogic {
 
 
         public String totalFolha(String data) throws DataInvalidaException, DataInicialPosteriorFinalException, IOException {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
-            LocalDate dataF;
-            LocalDate dataInicialComissionado;
-            try {
-                dataF = LocalDate.parse(data, formatter);
-                dataInicialComissionado = LocalDate.parse("1/1/2005", formatter);
-            }catch (DateTimeParseException e)
-            {
-                throw new DataInvalidaException();
-            }
             ListaEmpregados empregados = readXML();
             double total = 0;
             for (Empregado e: empregados.getList())
             {
-                switch (e.getTipo()) {
-                    case "horista" -> {
-                        EmpregadoHorista eh = (EmpregadoHorista) e;
-                        if (dataF.getDayOfWeek() == DayOfWeek.FRIDAY) {
-                            total += eh.getHoras(dataF.minusDays(7), dataF, false) * eh.getSalario();
-                            total += eh.getHoras(dataF.minusDays(7), dataF, true) * eh.getSalario() * 1.5;
-                        }
-                    }
-                    case "comissionado" -> {
-                        EmpregadoComissionado ec = (EmpregadoComissionado) e;
-                        if (dataF.getDayOfWeek() == DayOfWeek.FRIDAY) {
-                            if ((ChronoUnit.DAYS.between(dataInicialComissionado, dataF) + 1) % 14 == 0) {
-                                total += Math.floor(ec.getTotalVendas(dataF.minusDays(13), dataF) * ec.getTaxaDeComissao() * 100) / 100d;
-                                total += Math.floor(ec.getSalario() * 24 / 52 * 100) / 100d;
-                            }
-                        }
-                    }
-                    case "assalariado" -> {
-                        EmpregadoAssalariado ea = (EmpregadoAssalariado) e;
-                        if (dataF.with(TemporalAdjusters.lastDayOfMonth()).getDayOfMonth() == dataF.getDayOfMonth()) {
-                            total += ea.getSalario();
-                        }
-                    }
-                }
+                ProcessaPagamento payment = new ProcessaPagamento(e);
+                total += payment.valorEmpregado(data);
             }
             return String.format("%,.2f",total).replace(".", "");
         }

@@ -9,6 +9,7 @@ import java.time.LocalDate;
 public class EmpregadoAssalariado extends Empregado {
     public EmpregadoAssalariado(String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
         super(nome, endereco, tipo, salario);
+        this.agendaPagamento = "mensal $";
     }
 
     public EmpregadoAssalariado() {

@@ -30,6 +30,7 @@ public class EmpregadoComissionado extends Empregado {
         super(nome, endereco, tipo, salario);
         this.taxaDeComissao = Double.parseDouble(taxaDeComissao.replace(",", "."));
         vendas = new ArrayList<>();
+        this.agendaPagamento = "semanal 2 5";
     }
 
     public EmpregadoComissionado() {

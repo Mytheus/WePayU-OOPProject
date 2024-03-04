@@ -107,9 +107,13 @@ public class TratamentoEntrada {
     private boolean atributoNaoExiste(String atributo)
     {
         String[] atributos = {"nome", "id", "tipo", "endereco", "salario", "comissao", "sindicalizado",
-                "metodoPagamento", "idSindicato", "banco", "agencia", "taxaSindical", "contaCorrente"};
-        ArrayList<String> a = new ArrayList<>(List.of(atributos));
-        return !a.contains(atributo);
+                "metodoPagamento", "idSindicato", "banco", "agencia", "taxaSindical", "contaCorrente",
+                "agendaPagamento"};
+        for (String s: atributos)
+        {
+            if (s.equals(atributo)) return false;
+        }
+        return true;
     }
 
     private boolean empregadoHorista()
@@ -138,6 +142,7 @@ public class TratamentoEntrada {
         else if (this.taxaDeComissao!= null && comissaoNaoNumerico()) throw new ComissaoDeveSerNumericaException();
         else if (this.taxaDeComissao!= null && comissaoNegativo()) throw new ComissaoDeveSerNaoNegativaException();
     }
+
 
     public void checkComissao(String taxaComissao) throws ComissaoNaoPodeSerNulaException, ComissaoDeveSerNumericaException, ComissaoDeveSerNaoNegativaException {
         this.taxaDeComissao = taxaComissao.replace(",", ".");
@@ -282,6 +287,12 @@ public class TratamentoEntrada {
         if (!(metodoPagamento.equals("emMaos") || metodoPagamento.equals("correios") || metodoPagamento.equals("banco"))) {
             throw new MetodoPagamentoInvalidoException();
         }
+    }
+
+    public void checkAgendaPagamento (String agendaPagamento) throws AgendaPagamentoNaoDisponivelException {
+        String[] tipos = {"semanal 2 5", "mensal $", "semanal 5"};
+        ArrayList<String> a = new ArrayList<>(List.of(tipos));
+        if (!a.contains(agendaPagamento)) throw new AgendaPagamentoNaoDisponivelException();
     }
 
 }
