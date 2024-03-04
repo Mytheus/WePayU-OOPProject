@@ -1,7 +1,6 @@
 package br.ufal.ic.p2.wepayu.utils;
 
 import java.io.*;
-import java.util.Scanner;
 
 
 
@@ -28,27 +27,11 @@ public class Persistence {
         }
     }
 
-    public String readFromFile()
-    {
-        String content = "";
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(this.path));
-            reader.readLine();
-            content = reader.readLine();
-            reader.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return content;
-    }
-
     public void copyFrom(String fromPath)
     {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(fromPath));
-            String content = "";
+            String content;
             while(true)
             {
                 content = reader.readLine();
@@ -56,8 +39,6 @@ public class Persistence {
                 this.writeToFile(content);
             }
             reader.close();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -12,7 +12,7 @@ public class ListaAgendasPagamento {
 
     public ListaAgendasPagamento()
     {
-        this.agendas = new ArrayList<AgendaDePagamento>();
+        this.agendas = new ArrayList<>();
     }
 
     public List<AgendaDePagamento> getAgendas() {

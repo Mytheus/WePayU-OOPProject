@@ -30,13 +30,13 @@ public class BusinessLogic {
 
 
     private boolean system;
-    private Stack<ListaEmpregados> undoStack;
-    private Stack<ListaEmpregados> redoStack;
+    private final Stack<ListaEmpregados> undoStack;
+    private final Stack<ListaEmpregados> redoStack;
     private final String[] agendasFixas = {"mensal $", "semanal 5", "semanal 2 5"};
 
         public BusinessLogic() {
-            undoStack = new Stack<ListaEmpregados>();
-            redoStack = new Stack<ListaEmpregados>();
+            undoStack = new Stack<>();
+            redoStack = new Stack<>();
 
         }
 
@@ -672,10 +672,6 @@ public class BusinessLogic {
             double total = Double.parseDouble(this.totalFolha(data).replace(",", "."));
             persistence.writeToFile(String.format("TOTAL FOLHA: %-2.2f", total));
 
-            /*
-            persistence.readWriteToFile("folhaPagamentoCabecalhos\\assalariado.txt");
-            persistence.readWriteToFile("folhaPagamentoCabecalhos\\comissionado.txt");
-            persistence.appendToFile(String.format("TOTAL FOLHA: %s", totalFolha(data)));*/
         }
 
         public int getNumeroDeEmpregados() throws IOException {
