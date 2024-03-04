@@ -1,6 +1,7 @@
 package br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
+import br.ufal.ic.p2.wepayu.models.pagamento.AgendaDePagamento;
 import br.ufal.ic.p2.wepayu.utils.InfoFolha;
 import br.ufal.ic.p2.wepayu.utils.TratamentoEntrada;
 import br.ufal.ic.p2.wepayu.models.ResultadoDeVenda;
@@ -26,11 +27,11 @@ public class EmpregadoComissionado extends Empregado {
 
     public EmpregadoComissionado(String nome, String endereco, String tipo, String salario,
                                  String taxaDeComissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException,
-            EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
+            EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, DescAgendaInvalidaException {
         super(nome, endereco, tipo, salario);
         this.taxaDeComissao = Double.parseDouble(taxaDeComissao.replace(",", "."));
         vendas = new ArrayList<>();
-        this.agendaPagamento = "semanal 2 5";
+        this.agendaPagamento = new AgendaDePagamento("semanal 2 5");
     }
 
     public EmpregadoComissionado() {

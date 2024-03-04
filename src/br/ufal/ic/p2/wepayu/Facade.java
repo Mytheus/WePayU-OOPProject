@@ -14,21 +14,19 @@ public class Facade {
     }
 
 
-    public void zerarSistema()
-    {
+    public void zerarSistema() throws DescAgendaInvalidaException, IOException {
         this.bl.zerarSistema();
     }
-    public void encerrarSistema()
-    {
+    public void encerrarSistema() throws IOException {
         this.bl.encerrarSistema();
     }
     public String criarEmpregado (String nome, String endereco, String tipo, String salario) throws
             EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException,
             SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException,
-            ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException {
+            ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException, DescAgendaInvalidaException {
         return this.bl.criarEmpregado(nome, endereco, tipo, salario);
     }
-    public String criarEmpregado (String nome, String endereco, String tipo, String salario, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException, ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException {
+    public String criarEmpregado (String nome, String endereco, String tipo, String salario, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException, ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException, DescAgendaInvalidaException {
         return this.bl.criarEmpregado(nome, endereco, tipo, salario, comissao);
     }
 
@@ -44,7 +42,7 @@ public class Facade {
         this.bl.alteraEmpregado(emp, atributo, valor1, idSindicato, taxaSindical);
     }
 
-    public void alteraEmpregado(String emp, String atributo, String valor, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, IOException {
+    public void alteraEmpregado(String emp, String atributo, String valor, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, IOException, DescAgendaInvalidaException {
         this.bl.alteraEmpregado(emp, atributo, valor, comissao);
     }
 
@@ -111,4 +109,7 @@ public class Facade {
         this.bl.redo();
     }
 
+    public void criarAgendaDePagamentos(String descricao) throws DescAgendaInvalidaException, AgendaPagamentoJaExisteException, IOException {
+        this.bl.criarAgendaDePagamentos(descricao);
+    }
 }

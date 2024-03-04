@@ -5,6 +5,7 @@ import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
 import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoAssalariado;
 import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoComissionado;
 import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoHorista;
+import br.ufal.ic.p2.wepayu.models.pagamento.AgendaDePagamento;
 import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.Banco;
 
 import java.beans.XMLDecoder;
@@ -25,11 +26,13 @@ import java.util.*;
 public class BusinessLogic {
 
     private final static String FILEPATH = "XMLFiles\\empregados.xml";
+    private final static String FILEPATHAGENDA = "XMLFiles\\agendas.xml";
 
 
     private boolean system;
     private Stack<ListaEmpregados> undoStack;
     private Stack<ListaEmpregados> redoStack;
+    private final String[] agendasFixas = {"mensal $", "semanal 5", "semanal 2 5"};
 
         public BusinessLogic() {
             undoStack = new Stack<ListaEmpregados>();
@@ -57,13 +60,19 @@ public class BusinessLogic {
         }
     }
 
-        public void zerarSistema()
-        {
+        public void zerarSistema() throws DescAgendaInvalidaException, IOException {
             stackUndo();
             system = true;
+            File filea = new File(FILEPATHAGENDA);
+            if (filea.exists()) filea.delete();
             File file = new File(FILEPATH);
             if (file.exists()) file.delete();
-
+            ListaAgendasPagamento agendas = readXMLAgenda();
+            for (String agendaFixa : agendasFixas) {
+                AgendaDePagamento a = new AgendaDePagamento(agendaFixa);
+                agendas.addAgenda(a);
+            }
+            writeToXMLAgenda(agendas);
         }
         public void encerrarSistema()
         {
@@ -132,31 +141,36 @@ public class BusinessLogic {
             }
             return empregados;
         }
+    private ListaAgendasPagamento readXMLAgenda() throws IOException {
+        ListaAgendasPagamento agendas;
+        File file = new File(FILEPATHAGENDA);
+        if(file.length()==0 || !file.exists()) return new ListaAgendasPagamento();
+        else
+        {
+            FileInputStream fis = new FileInputStream(FILEPATHAGENDA);
+            XMLDecoder decoder = new XMLDecoder(fis);
+            agendas = (ListaAgendasPagamento) decoder.readObject();
+            decoder.close();
+            fis.close();
+        }
+        return agendas;
+    }
 
         private void writeToXML(ListaEmpregados empregados) throws IOException {
             FileOutputStream fos = new FileOutputStream(FILEPATH);
             XMLEncoder encoder = new XMLEncoder(fos);
-            /*
-            encoder.setPersistenceDelegate(LocalDate.class,
-                    new PersistenceDelegate() {
-
-                        @Override
-                        protected boolean mutatesTo(Object oldInstance, Object newInstance) {
-                            return oldInstance.equals(newInstance);
-                        }
-                        @Override
-                        protected Expression instantiate(Object localDate, Encoder encdr) {
-                            return new Expression(localDate,
-                                    LocalDate.class,
-                                    "parse",
-                                    new Object[]{localDate.toString()});
-                        }
-                    });
-            */
             encoder.writeObject(empregados);
             encoder.close();
             fos.close();
         }
+
+    private void writeToXMLAgenda(ListaAgendasPagamento agendas) throws IOException {
+        FileOutputStream fos = new FileOutputStream(FILEPATHAGENDA);
+        XMLEncoder encoder = new XMLEncoder(fos);
+        encoder.writeObject(agendas);
+        encoder.close();
+        fos.close();
+    }
 
         private String formatDoubleOutput(double value)
         {
@@ -168,7 +182,7 @@ public class BusinessLogic {
         public String criarEmpregado (String nome, String endereco, String tipo, String salario) throws
                 EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException,
                 SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException,
-                ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException {
+                ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException, DescAgendaInvalidaException {
 
             //Declara empregado
             Empregado e;
@@ -195,7 +209,7 @@ public class BusinessLogic {
         }
 
         //Função para empregado comissionado
-        public String criarEmpregado (String nome, String endereco, String tipo, String salario, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException, ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException {
+        public String criarEmpregado (String nome, String endereco, String tipo, String salario, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException, ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException, DescAgendaInvalidaException {
 
             //Declara empregado
             Empregado e;
@@ -259,7 +273,7 @@ public class BusinessLogic {
                     if (!Boolean.parseBoolean(e.getSindicalizado())) throw new EmpregadoNaoSindicalizadoException();
                     yield formatDoubleOutput(e.getMembroSindicato().getTaxaSindical());
                 }
-                case "agendaPagamento" -> e.getAgendaPagamento();
+                case "agendaPagamento" -> e.getAgendaPagamento().getRegime();
                 default -> "";
             };
         }
@@ -306,8 +320,7 @@ public class BusinessLogic {
                     else throw new ValorTrueOuFalseException();
                     break;
                 case "agendaPagamento":
-                    entrada.checkAgendaPagamento(valor1);
-                    e.setAgendaPagamento(valor1);
+                    e = addAgendaEmpregado(valor1, e);
                     break;
                 default:
                     throw new AtributoNaoExisteException();
@@ -338,7 +351,7 @@ public class BusinessLogic {
             writeToXML(empregados);
         }
 
-        public void alteraEmpregado(String emp, String atributo, String valor, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, IOException {
+        public void alteraEmpregado(String emp, String atributo, String valor, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, IOException, DescAgendaInvalidaException {
 
             ListaEmpregados empregados = readXML();
 
@@ -667,8 +680,29 @@ public class BusinessLogic {
 
         public int getNumeroDeEmpregados() throws IOException {
             ListaEmpregados empregados = readXML();
-            int size = empregados.size();
-            return size;
+            return empregados.size();
+        }
+
+        public void criarAgendaDePagamentos(String descricao) throws DescAgendaInvalidaException, AgendaPagamentoJaExisteException, IOException {
+            ListaAgendasPagamento agendas = readXMLAgenda();
+            if (agendas.hasAgenda(descricao)) throw new AgendaPagamentoJaExisteException();
+            AgendaDePagamento agendaDePagamento = new AgendaDePagamento(descricao);
+            agendas.addAgenda(agendaDePagamento);
+            writeToXMLAgenda(agendas);
+
+        }
+
+        public Empregado addAgendaEmpregado(String agenda, Empregado e) throws AgendaPagamentoNaoDisponivelException, IOException {
+            ListaAgendasPagamento agendas = readXMLAgenda();
+            for (AgendaDePagamento a:agendas.getAgendas())
+            {
+                if (a.getRegime().equals(agenda))
+                {
+                    e.setAgendaPagamento(a);
+                    return e;
+                }
+            }
+            throw new AgendaPagamentoNaoDisponivelException();
         }
 
     }

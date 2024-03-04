@@ -289,10 +289,5 @@ public class TratamentoEntrada {
         }
     }
 
-    public void checkAgendaPagamento (String agendaPagamento) throws AgendaPagamentoNaoDisponivelException {
-        String[] tipos = {"semanal 2 5", "mensal $", "semanal 5"};
-        ArrayList<String> a = new ArrayList<>(List.of(tipos));
-        if (!a.contains(agendaPagamento)) throw new AgendaPagamentoNaoDisponivelException();
-    }
 
 }

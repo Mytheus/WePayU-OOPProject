@@ -1,6 +1,7 @@
 package br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
+import br.ufal.ic.p2.wepayu.models.pagamento.AgendaDePagamento;
 import br.ufal.ic.p2.wepayu.utils.InfoFolha;
 import br.ufal.ic.p2.wepayu.utils.TratamentoEntrada;
 import br.ufal.ic.p2.wepayu.models.CartaoDePonto;
@@ -16,14 +17,11 @@ public class EmpregadoHorista extends Empregado {
 
 
 
-
-    protected String dataUltimoPagamento;
     protected List<CartaoDePonto> pontos;
-    public EmpregadoHorista(String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
+    public EmpregadoHorista(String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, DescAgendaInvalidaException {
         super(nome, endereco, tipo, salario);
         pontos = new ArrayList<>();
-        this.dataUltimoPagamento = null;
-        this.agendaPagamento = "semanal 5";
+        this.agendaPagamento = new AgendaDePagamento("semanal 5");
     }
 
     public EmpregadoHorista() {
@@ -35,14 +33,6 @@ public class EmpregadoHorista extends Empregado {
 
     public void setPontos(List<CartaoDePonto> pontos) {
         this.pontos = pontos;
-    }
-
-    public String getDataUltimoPagamento() {
-        return dataUltimoPagamento;
-    }
-
-    public void setDataUltimoPagamento(String dataUltimoPagamento) {
-        this.dataUltimoPagamento = dataUltimoPagamento;
     }
 
     public void addNewPonto(String data, String horas) throws DataInvalidaException {

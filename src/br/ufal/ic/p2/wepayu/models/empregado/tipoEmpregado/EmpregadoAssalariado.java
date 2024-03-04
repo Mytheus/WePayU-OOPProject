@@ -2,14 +2,15 @@ package br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
 import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
+import br.ufal.ic.p2.wepayu.models.pagamento.AgendaDePagamento;
 import br.ufal.ic.p2.wepayu.utils.InfoFolha;
 
 import java.time.LocalDate;
 
 public class EmpregadoAssalariado extends Empregado {
-    public EmpregadoAssalariado(String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
+    public EmpregadoAssalariado(String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, DescAgendaInvalidaException {
         super(nome, endereco, tipo, salario);
-        this.agendaPagamento = "mensal $";
+        this.agendaPagamento = new AgendaDePagamento("mensal $");
     }
 
     public EmpregadoAssalariado() {

@@ -1,6 +1,7 @@
 package br.ufal.ic.p2.wepayu.models.empregado;
 
 import br.ufal.ic.p2.wepayu.Exception.*;
+import br.ufal.ic.p2.wepayu.models.pagamento.AgendaDePagamento;
 import br.ufal.ic.p2.wepayu.models.pagamento.MetodoPagamento;
 import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.Banco;
 import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.Correios;
@@ -19,7 +20,9 @@ public class Empregado implements Comparable<Empregado> {
 
 
 
-    protected String agendaPagamento;
+
+    protected String dataUltimoPagamento;
+    protected AgendaDePagamento agendaPagamento;
 
 
     protected String sindicalizado;
@@ -45,17 +48,26 @@ public class Empregado implements Comparable<Empregado> {
         this.salario = Double.parseDouble(salario.replace(",", "."));
         this.metodoPagamento = new EmMaos();
         this.sindicalizado = "false";
+        this.dataUltimoPagamento = null;
     }
 
     public Empregado() {
     }
 
 
-    public String getAgendaPagamento() {
+    public String getDataUltimoPagamento() {
+        return dataUltimoPagamento;
+    }
+
+    public void setDataUltimoPagamento(String dataUltimoPagamento) {
+        this.dataUltimoPagamento = dataUltimoPagamento;
+    }
+
+    public AgendaDePagamento getAgendaPagamento() {
         return agendaPagamento;
     }
 
-    public void setAgendaPagamento(String agendaPagamento) {
+    public void setAgendaPagamento(AgendaDePagamento agendaPagamento) {
         this.agendaPagamento = agendaPagamento;
     }
     public static int getCountId() {
