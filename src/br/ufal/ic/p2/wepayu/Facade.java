@@ -20,6 +20,7 @@ public class Facade {
     }
     public void encerrarSistema()
     {
+        this.bl.encerrarSistema();
     }
     public String criarEmpregado (String nome, String endereco, String tipo, String salario) throws
             EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException,
@@ -98,5 +99,16 @@ public class Facade {
         this.bl.rodaFolha(data, saida);
     }
 
+    public String getNumeroDeEmpregados() throws IOException {
+        return Integer.toString(this.bl.getNumeroDeEmpregados());
+    }
+
+    public void undo() throws NaoHaComandoUndoException, NaoPodeComandoEncerrarSistemaException {
+        this.bl.undo();
+    }
+
+    public void redo() throws NaoHaComandoUndoException, NaoPodeComandoEncerrarSistemaException {
+        this.bl.redo();
+    }
 
 }

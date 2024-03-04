@@ -20,19 +20,17 @@ public class TratamentoEntrada {
     private String salario;
     private String taxaDeComissao;
 
-    public TratamentoEntrada (String id, String nome, String endereco, String tipo, String salario)
+    public TratamentoEntrada (String nome, String endereco, String tipo, String salario)
     {
-        this.id = id;
         this.nome = nome;
         this.endereco = endereco;
         this.tipo = tipo;
         this.salario = salario.replace(",", ".");
         this.taxaDeComissao = null;
     }
-    public TratamentoEntrada (String id, String nome, String endereco, String tipo, String salario,
+    public TratamentoEntrada (String nome, String endereco, String tipo, String salario,
                               String taxaDeComissao)
     {
-        this.id = id;
         this.nome = nome;
         this.endereco = endereco;
         this.tipo = tipo;

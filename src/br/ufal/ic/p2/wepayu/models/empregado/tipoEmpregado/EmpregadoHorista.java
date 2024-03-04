@@ -8,6 +8,7 @@ import br.ufal.ic.p2.wepayu.models.empregado.Empregado;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,10 +16,13 @@ public class EmpregadoHorista extends Empregado {
 
 
 
+
+    protected String dataUltimoPagamento;
     protected List<CartaoDePonto> pontos;
-    public EmpregadoHorista(String id, String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
-        super(id, nome, endereco, tipo, salario);
+    public EmpregadoHorista(String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
+        super(nome, endereco, tipo, salario);
         pontos = new ArrayList<>();
+        this.dataUltimoPagamento = null;
     }
 
     public EmpregadoHorista() {
@@ -30,6 +34,14 @@ public class EmpregadoHorista extends Empregado {
 
     public void setPontos(List<CartaoDePonto> pontos) {
         this.pontos = pontos;
+    }
+
+    public String getDataUltimoPagamento() {
+        return dataUltimoPagamento;
+    }
+
+    public void setDataUltimoPagamento(String dataUltimoPagamento) {
+        this.dataUltimoPagamento = dataUltimoPagamento;
     }
 
     public void addNewPonto(String data, String horas) throws DataInvalidaException {
@@ -83,7 +95,12 @@ public class EmpregadoHorista extends Empregado {
 
     public InfoFolha getInfo(LocalDate data) throws DataInicialPosteriorFinalException, DataInicialInvalidaException,
             DataFinalInvalidaException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-M-d");
+
         LocalDate dataInicial = data.minusDays(7);
+
+        if (Boolean.parseBoolean(this.getSindicalizado()) && dataUltimoPagamento==null) dataUltimoPagamento =
+                dataInicial.toString();
 
         int horas = (int)this.getHoras(dataInicial, data, false);
         int extra = (int)(this.getHoras(dataInicial, data, true));
@@ -95,7 +112,8 @@ public class EmpregadoHorista extends Empregado {
         {
             double taxasAdc = this.getMembroSindicato().getTaxasServico(dataInicial.toString(),
                             data.toString());
-            desconto = this.getMembroSindicato().getTaxaSindical() * 7;
+            desconto =
+                    this.getMembroSindicato().getTaxaSindical() * (ChronoUnit.DAYS.between(LocalDate.parse(dataUltimoPagamento, formatter), data));
             desconto = desconto + taxasAdc;
         }
         double salLiq = 0;
@@ -106,7 +124,7 @@ public class EmpregadoHorista extends Empregado {
         else {
             desconto = 0;
         }
-
+        if(Boolean.parseBoolean(this.getSindicalizado()) && desconto>0) dataUltimoPagamento = data.toString();
         String metodo = this.getMetodoPagamentoName();
         return new InfoFolha(this.nome, horas, extra, salBruto, desconto, salLiq, metodo);
     }

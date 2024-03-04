@@ -7,7 +7,8 @@ import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoComissionado
 import br.ufal.ic.p2.wepayu.models.empregado.tipoEmpregado.EmpregadoHorista;
 import br.ufal.ic.p2.wepayu.models.pagamento.tipoPagamento.Banco;
 
-import java.beans.*;
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -18,36 +19,82 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 
 public class BusinessLogic {
 
     private final static String FILEPATH = "XMLFiles\\empregados.xml";
 
-    static protected int idEmpregado;
 
+    private boolean system;
+    private Stack<ListaEmpregados> undoStack;
+    private Stack<ListaEmpregados> redoStack;
 
         public BusinessLogic() {
+            undoStack = new Stack<ListaEmpregados>();
+            redoStack = new Stack<ListaEmpregados>();
 
         }
 
-    private String getIdEmpregado() {
-        return Integer.toString(idEmpregado);
+        private void stackUndo()
+        {
+            try {
+                this.undoStack.add(readXML());
+            }
+            catch(IOException exception) {
+                throw new RuntimeException(exception);
+            }
+        }
+
+    private void stackRedo()
+    {
+        try {
+            this.redoStack.add(readXML());
+        }
+        catch(IOException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 
         public void zerarSistema()
         {
-
-            idEmpregado = 0;
+            stackUndo();
+            system = true;
             File file = new File(FILEPATH);
             if (file.exists()) file.delete();
 
         }
         public void encerrarSistema()
         {
+            system = false;
+        }
+
+        public void undo() throws NaoHaComandoUndoException, NaoPodeComandoEncerrarSistemaException {
+            if (system) {
+                if (undoStack.isEmpty()) throw new NaoHaComandoUndoException();
+                try {
+                    stackRedo();
+                    writeToXML(undoStack.pop());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            else throw new NaoPodeComandoEncerrarSistemaException();
+        }
+
+        public void redo() throws NaoHaComandoUndoException, NaoPodeComandoEncerrarSistemaException {
+            if (system) {
+                try {
+                    stackUndo();
+                    writeToXML(redoStack.pop());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } catch (EmptyStackException es) {
+                    throw new NaoHaComandoUndoException();
+                }
+            }
+            else throw new NaoPodeComandoEncerrarSistemaException();
         }
 
 
@@ -122,48 +169,50 @@ public class BusinessLogic {
                 EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException,
                 SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException,
                 ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException {
+
             //Declara empregado
             Empregado e;
             //Armazena id
-            String id = getIdEmpregado();
-            //Verifica a entrada
-            TratamentoEntrada entrada = new TratamentoEntrada(id, nome, endereco, tipo, salario);
+
+            TratamentoEntrada entrada = new TratamentoEntrada(nome, endereco, tipo, salario);
             entrada.fullCheckCriarEmpregado();
             //Cria classe a partir do tipo
             if (tipo.equals("horista"))
             {
-                e = new EmpregadoHorista(id ,nome, endereco, tipo, salario);
+                e = new EmpregadoHorista(nome, endereco, tipo, salario);
             }
             else
             {
-                e = new EmpregadoAssalariado(id, nome, endereco, tipo, salario);
+                e = new EmpregadoAssalariado(nome, endereco, tipo, salario);
             }
+            //Verifica a entrada
+
             //Adiciona ao xml
+            stackUndo();
             addEmpregadoXML(e);
-            //Incrementa id e retorna
-            String idAtual = getIdEmpregado();
-            idEmpregado++;
-            return idAtual;
+            //retorna
+            return e.getId();
         }
 
         //Função para empregado comissionado
         public String criarEmpregado (String nome, String endereco, String tipo, String salario, String comissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException, SalarioDeveSerNaoNegativoException, TipoNaoAplicavelException, ComissaoNaoPodeSerNulaException, SalarioDeveSerNumericoException, ComissaoDeveSerNumericaException, TipoInvalidoException, ComissaoDeveSerNaoNegativaException, IOException {
+
             //Declara empregado
             Empregado e;
             //Armazena id
-            String id = getIdEmpregado();
             //Tratamento de entrada
-            TratamentoEntrada entrada = new TratamentoEntrada(id, nome, endereco, tipo, salario, comissao);
+
+            TratamentoEntrada entrada = new TratamentoEntrada(nome, endereco, tipo, salario, comissao);
             entrada.fullCheckCriarEmpregado();
             //Cria novo empregado comissionado
-            e = new EmpregadoComissionado(id, nome, endereco, tipo, salario,
+            e = new EmpregadoComissionado(nome, endereco, tipo, salario,
                     comissao);
+
             //Adiciona ao xml
+            stackUndo();
             addEmpregadoXML(e);
             //Incrementa id e retorna
-            String idAtual = getIdEmpregado();
-            idEmpregado++;
-            return idAtual;
+            return e.getId();
         }
 
         public String getAtributoEmpregado(String emp, String atributo) throws EmpregadoNaoExisteException, IdEmpregadoNaoPodeSerNuloException, AtributoNaoExisteException, EmpregadoNaoHoristaException, EmpregadoNaoComissionadoException, EmpregadoNaoRecebeBancoException, EmpregadoNaoSindicalizadoException, IOException {
@@ -260,6 +309,7 @@ public class BusinessLogic {
                     throw new AtributoNaoExisteException();
             }
             empregados.set(emp, e);
+            stackUndo();
             writeToXML(empregados);
         }
 
@@ -280,7 +330,7 @@ public class BusinessLogic {
                 e.mudaSindicalizado("true", idSindicato, taxaSindical);
             }
             empregados.set(emp, e);
-
+            stackUndo();
             writeToXML(empregados);
         }
 
@@ -296,8 +346,9 @@ public class BusinessLogic {
                 if (e.getTipo().equals("horista") || e.getTipo().equals("assalariado"))
                 {
 
-                    e = new EmpregadoComissionado(e.getId(), e.getNome(), e.getEndereco(), valor,
+                    e = new EmpregadoComissionado(e.getNome(), e.getEndereco(), valor,
                             Double.toString(e.getSalario()), comissao);
+                    e.setId(emp);
                 }
                 else
                 {
@@ -309,7 +360,8 @@ public class BusinessLogic {
             {
                 if (e.getTipo().equals("comissionado") || e.getTipo().equals("assalariado"))
                 {
-                    e = new EmpregadoHorista(e.getId(), e.getNome(), e.getEndereco(), valor, comissao);
+                    e = new EmpregadoHorista(e.getNome(), e.getEndereco(), valor, comissao);
+                    e.setId(emp);
                 }
                 else
                 {
@@ -319,13 +371,14 @@ public class BusinessLogic {
             }
 
             empregados.set(emp, e);
-
+            stackUndo();
             writeToXML(empregados);
         }
 
 
         public void alteraEmpregado(String emp, String atributo, String valor1, String banco, String agencia,
                                     String contaCorrente) throws EmpregadoNaoExisteException, AgenciaNaoNuloException, ContaCorrenteNaoNuloException, BancoNaoNuloException, IOException {
+
             ListaEmpregados empregados = readXML();
 
             assert empregados != null;
@@ -337,6 +390,7 @@ public class BusinessLogic {
             e.setMetodoPagamento(banco, agencia, contaCorrente);
 
             empregados.set(emp, e);
+            stackUndo();
             writeToXML(empregados);
         }
 
@@ -356,7 +410,7 @@ public class BusinessLogic {
             ListaEmpregados empregados = readXML();
             assert empregados != null;
             empregados.remove(emp);
-
+            stackUndo();
             writeToXML(empregados);
         }
 
@@ -378,6 +432,7 @@ public class BusinessLogic {
                 ((EmpregadoHorista) e).addNewPonto(data, horas);
                 empregados.set(emp, e);
             }
+            stackUndo();
             writeToXML(empregados);
         }
 
@@ -393,18 +448,16 @@ public class BusinessLogic {
 
             entrada = new TratamentoEntrada(e.getId(), e.getTipo());
             entrada.checkTipoEmpregado("comissionado");
-
             if (e.getTipo().equals("comissionado"))
             {
                 ((EmpregadoComissionado) e).addNewVenda(data, valor);
                 empregados.set(emp, e);
             }
-
+            stackUndo();
             writeToXML(empregados);
         }
 
         public void lancaTaxaServico(String membro, String data, String valor) throws DataInvalidaException, MembroNaoExisteException, IdMembroNaoPodeSerNulaException, ValorDeveSerPositivoException, IOException {
-
             TratamentoEntrada entrada = new TratamentoEntrada(membro);
             entrada.checkIdMembro();
             entrada.checkValorVenda(valor);
@@ -418,6 +471,7 @@ public class BusinessLogic {
                 e.addNewTaxaServico(data, valor);
                 empregados.set(e.getId(), e);
             }
+            stackUndo();
             writeToXML(empregados);
         }
 
@@ -546,6 +600,7 @@ public class BusinessLogic {
         }
 
         public void rodaFolha(String data, String saida) throws IOException, DataInvalidaException, DataInicialPosteriorFinalException, DataInicialInvalidaException, DataFinalInvalidaException {
+            stackUndo();
             ListaEmpregados empregados = readXML();
             List<Empregado> lista = empregados.getList();
             Collections.sort(lista);
@@ -564,7 +619,7 @@ public class BusinessLogic {
             persistence.copyFrom("placeholders\\horista.txt");
             int totalHoras = 0, totalExtra = 0;
             double totalSalB = 0, totalDesc = 0, totalSalLiq = 0;
-            if (!(dataF.with(TemporalAdjusters.lastDayOfMonth()).getDayOfMonth() == dataF.getDayOfMonth()))
+            if (dataF.getDayOfWeek() == DayOfWeek.FRIDAY)
             {
                 for (Empregado e: lista)
                 {
@@ -580,6 +635,7 @@ public class BusinessLogic {
                     }
                 }
             }
+            if (totalDesc>0)writeToXML(empregados);
 
             persistence.writeToFile(String.format("\nTOTAL HORISTAS %27d %5d %13.2f %9.2f %15.2f\n"
                     , totalHoras, totalExtra, totalSalB, totalDesc, totalSalLiq));
@@ -636,4 +692,11 @@ public class BusinessLogic {
             persistence.readWriteToFile("folhaPagamentoCabecalhos\\comissionado.txt");
             persistence.appendToFile(String.format("TOTAL FOLHA: %s", totalFolha(data)));*/
         }
+
+        public int getNumeroDeEmpregados() throws IOException {
+            ListaEmpregados empregados = readXML();
+            int size = empregados.size();
+            return size;
+        }
+
     }

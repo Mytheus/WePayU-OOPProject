@@ -7,8 +7,8 @@ import br.ufal.ic.p2.wepayu.utils.InfoFolha;
 import java.time.LocalDate;
 
 public class EmpregadoAssalariado extends Empregado {
-    public EmpregadoAssalariado(String id,String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
-        super(id, nome, endereco, tipo, salario);
+    public EmpregadoAssalariado(String nome, String endereco, String tipo, String salario) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
+        super(nome, endereco, tipo, salario);
     }
 
     public EmpregadoAssalariado() {

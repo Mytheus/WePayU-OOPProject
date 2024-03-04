@@ -11,6 +11,7 @@ public class Empregado implements Comparable<Empregado> {
 
 
     protected String id;
+    protected static int countId = 0;
     protected String nome;
     protected String endereco;
     protected String tipo;
@@ -30,9 +31,9 @@ public class Empregado implements Comparable<Empregado> {
     protected MetodoPagamento metodoPagamento;
 
 
-    public Empregado(String id, String nome, String endereco, String tipo, String salario)
+    public Empregado(String nome, String endereco, String tipo, String salario)
             throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException, EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
-        this.id = id;
+        this.id = Integer.toString(countId++);
         if (nome.isEmpty()) throw new NomeNaoPodeSerNuloException();
         this.nome = nome;
         if (endereco.isEmpty()) throw new EnderecoNaoPodeSerNuloException();
@@ -44,6 +45,14 @@ public class Empregado implements Comparable<Empregado> {
     }
 
     public Empregado() {
+    }
+
+    public static int getCountId() {
+        return countId;
+    }
+
+    public static void setCountId(int countId) {
+        Empregado.countId = countId;
     }
 
     public String getId() {

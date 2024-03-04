@@ -24,10 +24,10 @@ public class EmpregadoComissionado extends Empregado {
 
     protected List<ResultadoDeVenda> vendas;
 
-    public EmpregadoComissionado(String id,String nome, String endereco, String tipo, String salario,
+    public EmpregadoComissionado(String nome, String endereco, String tipo, String salario,
                                  String taxaDeComissao) throws EmpregadoNaoExisteException, NomeNaoPodeSerNuloException,
             EnderecoNaoPodeSerNuloException, SalarioNaoPodeSerNuloException {
-        super(id, nome, endereco, tipo, salario);
+        super(nome, endereco, tipo, salario);
         this.taxaDeComissao = Double.parseDouble(taxaDeComissao.replace(",", "."));
         vendas = new ArrayList<>();
     }
